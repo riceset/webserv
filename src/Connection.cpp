@@ -1,25 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Acceptor.cpp                                       :+:      :+:    :+:   */
+/*   Connection.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/13 16:44:10 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/16 01:22:27 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Acceptor.hpp"
+#include "Connection.hpp"
 #include "ASocket.hpp"
 #include <fcntl.h>
 #include <stdexcept>
 #include <iostream>
 #include <unistd.h>
+#include <errno.h>
 
-Acceptor::Acceptor() : ASocket() {}
+Connection::Connection() : ASocket() {}
 
-Acceptor::Acceptor(int listenerFd) : ASocket() {
+Connection::Connection(int listenerFd) : ASocket() {
     /* make a new socket for the client */
     socklen_t len = sizeof(addr_);
     fd_ = accept(listenerFd, (struct sockaddr *)&addr_, &len);
@@ -30,27 +31,31 @@ Acceptor::Acceptor(int listenerFd) : ASocket() {
     std::cout << "Accepted connection from " << addr_.sin_port << std::endl;
 }
 
-Acceptor::~Acceptor() {
+Connection::~Connection() {
     close(fd_);
 }
 
-int Acceptor::getFd() const {
+int Connection::getFd() const {
     return fd_;
 }
 
-void Acceptor::read() {
+void Connection::read() {
     char buff[1024];
     /* read from the client */
     ssize_t rlen = recv(fd_, buff, sizeof(buff) - 1, 0);
-    if (rlen == -1)
+    if (rlen < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return;
+        }
         throw std::runtime_error("recv failed");
-    else if (rlen == 0)
+    } else if (rlen == 0) {
         throw std::runtime_error("client disconnected");
+    }
     buff[rlen] = '\0';
     rbuff_ += buff;
 }
 
-void Acceptor::write() {
+void Connection::write() {
     /* write to the client */
     ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
     if (wlen == -1)
@@ -59,10 +64,10 @@ void Acceptor::write() {
     wbuff_.erase(0, wlen);
 }
 
-std::string Acceptor::getRbuff() const {
+std::string Connection::getRbuff() const {
     return rbuff_;
 }
 
-std::string Acceptor::getWbuff() const {
+std::string Connection::getWbuff() const {
     return wbuff_;
 }

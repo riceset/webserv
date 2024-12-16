@@ -6,54 +6,54 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/13 18:56:15 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/16 10:48:21 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <sys/epoll.h>
 #include <iostream>
-#include <unistd.h>
-#include <cstdio>
+#include <stdexcept>
+#include <map>          // C++98でunordered_mapが使えないのでmapを使用
+#include <cstring>
+#include <utility>
+#include <vector>
 #include "Listener.hpp"
-#include "Acceptor.hpp"
+#include "Connection.hpp"
 #include "Epoll.hpp"
-#include "EpollEvent.hpp"
+#include <unistd.h>
 
 int main() {
-    int PORT = 8080;
-    /* int MAX_EVENTS = 10; */
+	int port = 8080;
+	int max_events = 64;
+	Listener listener(port);
+	Epoll epoll(max_events);
+	std::map<int, Connection> connections;
+	epoll.addEvent(listener.getFd());
+	while (true) {
+		int nfds = epoll.epwait();
+		for (int i = 0; i < nfds; i++) {
+			int event_fd = epoll.getEventsList()[i].data.fd;
+			if (event_fd == listener.getFd()) {
+				try {
+					Connection new_connection(listener.getFd());
+					epoll.addEvent(new_connection.getFd());
+					connections.insert(std::make_pair(new_connection.getFd(), new_connection));
+					std::cout << "New connection: " << new_connection.getFd() << std::endl;
+				} catch (std::runtime_error &e) {
+					std::cerr << e.what() << std::endl;
+				}
+			} else {
+				try {
+					Connection &connection = connections.at(event_fd);
+					connection.read();
+					std::string request = connection.getRbuff();
+					std::cout << "Received request: " << request << std::endl;
+				} catch (std::runtime_error &e) {
+					std::cerr << e.what() << std::endl;
+				}
+			}
+		}
+	}
+	return 0;
+} 
 
-    /* create listen port */
-    Listener listener(PORT);
-
-    /* create epoll */
-    Epoll epoll;
-
-    /* add listener to epoll */
-    epoll.addEvent(listener.getFd());
-    std::cout << "Server started on port " << PORT << std::endl;
-    /* stargin the server */
-    while (true) {
-        int nfds = epoll.epwait();
-        if (nfds == -1)
-            return 1;
-        for (int i = 0; i < nfds; i++) {
-            int c_event = epoll.getEventsList()[i];
-            if (listener.getFd() == c_event.data.fd) {
-                try {
-                    Acceptor acceptor(listener.getFd());
-                    epoll.addEvent(acceptor.getFd());
-                    std::cout << "Accepted connection from " << acceptor.getFd() << std::endl;
-                } catch (std::exception &e) {
-                    std::cerr << e.what() << std::endl;
-                }
-            } else {
-                try {
-                   c_event. 
-                }
-            }
-        }
-    }
-    return 0;
-}
 

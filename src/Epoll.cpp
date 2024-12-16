@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:29:33 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/13 18:39:52 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/16 01:05:53 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ Epoll::Epoll(int max_events) {
     epfd_ = epoll_create1(0);
     if (epfd_ == -1)
         throw std::runtime_error("Failed to create epoll instance"); 
-    events_list_ = std::vector<struct epoll_event>();
+    events_list_.resize(max_events);
     max_events_ = max_events;
 }
 
@@ -33,7 +33,7 @@ int Epoll::getEpfd() const {
 }
 
 std::vector<struct epoll_event> Epoll::getEventsList() const {
-    return events_list;
+    return events_list_;
 }
 
 void Epoll::addEvent(int fd) {
@@ -42,11 +42,10 @@ void Epoll::addEvent(int fd) {
     new_event.data.fd = fd;
     if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &new_event) == -1)
         throw std::runtime_error("Failed to add event to epoll instance");
-    events_list.push_back(new_event);
 }
 
 int Epoll::epwait() {
-    int nfds = epoll_wait(epfd_, events_list->data(), events_list->size(), -1);
+    int nfds = epoll_wait(epfd_, events_list_.data(), events_list_.size(), -1);
     if (nfds == -1)
         throw std::runtime_error("epoll_wait failed");
     return nfds;

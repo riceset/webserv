@@ -6,22 +6,21 @@
 #    By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/12/09 17:15:36 by rmatsuba          #+#    #+#              #
-#    Updated: 2024/12/09 18:04:01 by rmatsuba         ###   ########.fr        #
+#    Updated: 2024/12/16 10:56:52 by rmatsuba         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # version of docker-compose
 # version: '3.8'
 
-# services
 services:
   cpp-env:
-    # build the image from the Dockerfile in the current directory
+    # build the image from the dockerfile in the current directory
     build:
-      # context: the path to the directory containing the Dockerfile
+      # context: the path to the directory containing the dockerfile
       context: ..
       # in this case, ../ is root path of this project
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/dockerfile
       # this path is relative to the context 
     # volumes: mount the host directory to the container directory
     volumes:
@@ -29,6 +28,10 @@ services:
       - ..:/usr/src/app
     # working directory
     working_dir: /usr/src/app
+    # expose port 8080 from the container to the host
+    ports:
+      - "8080:8080"
     # tty mode
-    # this enable the container to accept interactive commands of bash
+    # this enables the container to accept interactive commands of bash
     tty: true
+
