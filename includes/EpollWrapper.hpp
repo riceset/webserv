@@ -1,29 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   EpollEvent.hpp                                     :+:      :+:    :+:   */
+/*   EpollWrapper.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/13 14:47:53 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/13 16:56:39 by rmatsuba         ###   ########.fr       */
+/*   Created: 2024/12/13 14:08:59 by rmatsuba          #+#    #+#             */
+/*   Updated: 2024/12/16 14:15:28 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef EPOLLEVENT_HPP
-# define EPOLLEVENT_HPP
+#ifndef EPOLLWRAPPER_HPP
+#define EPOLLWRAPPER_HPP
 
 #include <sys/epoll.h>
+#include <vector>
+#include <stdexcept>
 
-class EpollEvent {
+class EpollWrapper {
     private:
-        struct epoll_event event_;
-        EpollEvent();
+        int epfd_;
+        size_t max_events_;
+        std::vector<struct epoll_event> events_list_;
+        EpollWrapper();
     public:
-        EpollEvent(int epfd, int event_fd);
-        ~EpollEvent();
-        void setEvent(int event);
-        struct epoll_event getEvent() const;
+        EpollWrapper(int max_events);
+        ~EpollWrapper();
+        int getEpfd() const;
+        std::vector<struct epoll_event> getEventsList() const;
+        void addEvent(int fd);
+        int epwait();
 };
 
 #endif

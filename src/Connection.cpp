@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/16 01:22:27 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/16 15:06:28 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ Connection::Connection(int listenerFd) : ASocket() {
 }
 
 Connection::~Connection() {
-    close(fd_);
+    /* close(fd_); */
 }
 
 int Connection::getFd() const {

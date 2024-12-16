@@ -1,37 +1,15 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    docker-compose.yml                                 :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2024/12/09 17:15:36 by rmatsuba          #+#    #+#              #
-#    Updated: 2024/12/16 10:56:52 by rmatsuba         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
-# version of docker-compose
-# version: '3.8'
-
+version: '3.8'
 services:
   cpp-env:
-    # build the image from the dockerfile in the current directory
     build:
-      # context: the path to the directory containing the dockerfile
       context: ..
-      # in this case, ../ is root path of this project
-      dockerfile: docker/dockerfile
-      # this path is relative to the context 
-    # volumes: mount the host directory to the container directory
-    volumes:
-      # - host directory:container directory
-      - ..:/usr/src/app
-    # working directory
-    working_dir: /usr/src/app
-    # expose port 8080 from the container to the host
+      dockerfile: docker/Dockerfile
     ports:
-      - "8080:8080"
-    # tty mode
-    # this enables the container to accept interactive commands of bash
+      - "8080:8080"  # ホスト:コンテナ
+    volumes:
+      - ../:/usr/src/app  # プロジェクト全体をコンテナにマウント
     tty: true
+networks:
+  default:
+    name: webserv_test_default
 

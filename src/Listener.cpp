@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 10:40:57 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/13 13:51:19 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/16 15:06:41 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ Listener::Listener(int port) : ASocket() {
         throw std::runtime_error("Failed to create socket");
     /* initialize sockaddr struct */
     addr_.sin_family = AF_INET;
-    addr_.sin_addr.s_addr = INADDR_ANY;
+    addr_.sin_addr.s_addr = htonl(INADDR_ANY);
     addr_.sin_port = htons(port);
     /* bind socket to address */
     if (bind(fd_, (struct sockaddr *)&addr_, sizeof(addr_)) == -1)
@@ -60,7 +60,7 @@ Listener::Listener(int port) : ASocket() {
 }
 
 Listener::~Listener() {
-    close(fd_);
+    /* close(fd_); */
 }
 
 int Listener::getFd() const {
