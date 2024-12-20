@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:29:33 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/16 15:06:33 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 00:26:58 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 EpollWrapper::EpollWrapper() {}
 
 EpollWrapper::EpollWrapper(int max_events) {
-    epfd_ = epoll_create1(0);
+    epfd_ = epoll_create(0);
     if (epfd_ == -1)
         throw std::runtime_error("Failed to create epoll instance"); 
     events_list_.resize(max_events);
@@ -45,8 +45,13 @@ void EpollWrapper::addEvent(int fd) {
         throw std::runtime_error("Failed to add event to epoll instance");
 }
 
+void EpollWrapper::deleteEvent(int fd) {
+    if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == -1)
+        throw std::runtime_error("Failed to delete event from epoll instance");
+}
+
 int EpollWrapper::epwait() {
-    int nfds = epoll_wait(epfd_, events_list_.data(), events_list_.size(), -1);
+    int nfds = epoll_wait(epfd_, events_list_.data(), events_list_.size(), 0);
     if (nfds == -1)
         throw std::runtime_error("epoll_wait failed");
     return nfds;

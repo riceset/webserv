@@ -1,34 +1,31 @@
 CXX = c++
-CXXFLAG = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 NAME = a.out
-SRCDIR = $(shell find . -type d  -not -name "includes" -not -name "test" -not -path ".*" | xargs)
-SRC = $(shell find . $(SRCDIR) -name "*.cpp" -type f | xargs)
+SRC = $(shell find $(SRCDIR) -name "*.cpp") main.cpp
+OBJ = $(SRC:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+SRCDIR = src
 OBJDIR = objs
-OBJ = $(SRC:%.cpp=$(OBJDIR)/%.o)
-INCLUDE = -I includes
-
-
-vpath	$(SRCDIR)
+INCLUDEDIR = includes
+INCLUDE = -I $(INCLUDEDIR)
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	@$(CXX) $(CXXFLAG) $(OBJ) $(INCLUDE) $(LIBRARY) -o $(NAME)
-	@echo "Compilation done"
+	@$(CXX) $(CXXFLAGS) $(OBJ) $(INCLUDE) -o $(NAME)
+	@echo "Compilation done: $(NAME)"
 
-$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAG) $(INCLUDE) -c $< -o $@
-	@echo "Compiled "$<" successfully"
+	@$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+	@echo "Compiled: $< -> $@"
 
 clean:
 	@rm -rf $(OBJDIR)
-	@echo "Objs deleted"
-	@echo "Clean done"
+	@echo "Object files deleted."
 
 fclean: clean
 	@rm -rf $(NAME)
-	@echo "Fclean done"
+	@echo "Executable deleted."
 
 re: fclean all
 

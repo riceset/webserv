@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:08:59 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/16 14:15:28 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 00:26:11 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class EpollWrapper {
         int getEpfd() const;
         std::vector<struct epoll_event> getEventsList() const;
         void addEvent(int fd);
+        void deleteEvent(int fd);
         int epwait();
 };
 

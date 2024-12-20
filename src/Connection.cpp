@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/16 15:06:28 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/19 22:51:45 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,14 @@ Connection::Connection(int listenerFd) : ASocket() {
         throw std::runtime_error("accept failed");
     if (fcntl(fd_, F_SETFL, O_NONBLOCK))
         throw std::runtime_error("Failed to set socket to non-blocking");
+    request_ = NULL;
+    respose_ = NULL;
     std::cout << "Accepted connection from " << addr_.sin_port << std::endl;
 }
 
 Connection::~Connection() {
+    if (request_)
+        delete request_;
     /* close(fd_); */
 }
 
@@ -39,7 +43,7 @@ int Connection::getFd() const {
     return fd_;
 }
 
-void Connection::read() {
+void Connection::readSocket() {
     char buff[1024];
     /* read from the client */
     ssize_t rlen = recv(fd_, buff, sizeof(buff) - 1, 0);
@@ -53,9 +57,10 @@ void Connection::read() {
     }
     buff[rlen] = '\0';
     rbuff_ += buff;
+    request_ = new HttpRequest(rbuff_);
 }
 
-void Connection::write() {
+void Connection::writeSocket() {
     /* write to the client */
     ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
     if (wlen == -1)
@@ -70,4 +75,8 @@ std::string Connection::getRbuff() const {
 
 std::string Connection::getWbuff() const {
     return wbuff_;
+}
+
+HttpRequest *Connection::getRequest() const {
+    return request_;
 }

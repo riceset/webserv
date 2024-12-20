@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/16 00:48:18 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/19 22:52:03 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 # define ACCELPTOR_HPP
 
 #include "ASocket.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 #include <string>
 
 class Connection: public ASocket {
@@ -21,14 +23,17 @@ class Connection: public ASocket {
         Connection();
         std::string rbuff_;
         std::string wbuff_;
+        HttpRequest *request_;
+        HttpResponse *response_;
     public:
         Connection(int clinentFd);
         ~Connection();
         int getFd() const;
-        void read();
-        void write();
+        void readSocket();
+        void writeSocket();
         std::string getRbuff() const;
         std::string getWbuff() const;
+        HttpRequest *getRequest() const;
 };
 
 #endif
