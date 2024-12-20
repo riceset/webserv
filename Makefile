@@ -7,6 +7,11 @@ SRCDIR = src
 OBJDIR = objs
 INCLUDEDIR = includes
 INCLUDE = -I $(INCLUDEDIR)
+TESTDIR = test
+TESTSRC = $(shell find $(TESTDIR) -name "*.cpp")
+TESTOBJ = $(TESTSRC:$(TESTDIR)/%.cpp=$(TESTOBJDIR)/%.o)
+TESTOBJDIR = testobjs
+TESTNAME = testprog
 
 all: $(NAME)
 
@@ -29,6 +34,24 @@ fclean: clean
 
 re: fclean all
 
+test: $(TESTOBJ)
+	@$(CXX) $(CXXFLAGS) $(TESTOBJ) $(INCLUDE) -o $(TESTNAME) 
+	@echo "Compilation done: test"
+
+$(TESTOBJDIR)/%.o: $(TESTDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+	@echo "Compiled: $< -> $@"
+
+testclean:
+	@rm -rf $(TESTOBJDIR)
+	@echo "Test object files deleted."
+
+testfclean: testclean
+	@rm -rf test
+	@echo "Test executable deleted."
+
+testre: testfclean test
 # docker command section
 
 # Paths

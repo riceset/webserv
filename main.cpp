@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 10:35:10 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 18:51:06 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,27 +42,32 @@ int main() {
                         std::cerr << "Accept failed: " << e.what() << std::endl;
                     }
                 } else if(connections.find(eventFd) != connections.end()) {
-                    Connection* conn = it->second;
                     if (ev & EPOLLIN) {
                         try {
-                            conn->readSocket();
+                            connections[eventFd]->second->readSocket();
                             ev = EPOLLOUT;
                         } catch (const std::runtime_error &re) {
+                            epollWrapper.deleteEvent(eventFd);
+                            close(connections[eventFd]->getFd());
+                            delete connections[eventFd]->second;
                             std::cout << "Read error: " << re.what() << std::endl;
                         }
                     } else if (ev & EPOLLOUT) {
                         try {
-                            conn->writeSocket();
+                            connections[eventFd]->second->writeSocket();
+                            ev = EPOLLIN;
                         } catch (const std::runtime_error &re) {
+                            epollWrapper.deleteEvent(eventFd);
+                            close(connections[eventFd]->getFd());
+                            delete connections[eventFd]->second;
                             std::cout << "Write error: " << re.what() << std::endl;
                         }
-                    }
-                    if (ev & (EPOLLERR | EPOLLHUP)) {
+                    } else if (ev & (EPOLLERR | EPOLLHUP)) {
                         // コネクションを閉じる
                         std::cerr << "Error or hangup on connection fd=" << eventFd << std::endl;
-                        close(conn->getFd());
-                        delete conn;
-                        connections.erase(it);
+                        epollWrapper.deleteEvent(eventFd);
+                        close(connections[eventFd]->getFd());
+                        delete connections[eventFd];
                     }
                 }
             }

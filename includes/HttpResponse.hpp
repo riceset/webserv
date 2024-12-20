@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 16:40:12 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 14:22:03 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 19:13:59 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ class HttpResponse : public AHttp {
         std::map<std::string, std::string> setResponseHeader(std::map<std::string, std::string> requestHeader);
         std::string setResponseBody(std::string requestBody);
         HttpResponse();
-        std::map<int, std::string> status_code_;
+        static std::map<int, std::string> status_code_;
     public:
         HttpResponse(HttpRequest *request);
         ~HttpResponse();

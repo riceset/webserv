@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 14:22:52 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 19:14:18 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,16 +19,18 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-HttpResponse::HttpResponse() {
-    start_line_.resize(3);
-    status_code_[200] = "OK";
-    status_code_[404] = "Not Found";
-    status_code_[501] = "Not Implemented";
+std::map<int, std::string> HttpResponse::status_code = {
+    {200, "OK"},
+    {404, "Not Found"},
+    {501, "Not Implemented"}
 }
+
+HttpResponse::HttpResponse() {}
 
 HttpResponse::~HttpResponse() {}
 
 HttpResponse::HttpResponse(HttpRequest *request) {
+    start_line_.resize(3);
     start_line_ = setResponseStartLine(request->getStartLine());
     headers_ = setResponseHeader(request->getHeader());
     body_ = setResponseBody(request->getBody());
@@ -54,25 +56,25 @@ std::vector<std::string> HttpResponse::setResponseStartLine(std::vector<std::str
 }
 
 void HttpResponse::setStatusCode(int code, std::string message, std::vector<std::string> &start_line) {
-    std::istringstream ss;
+    std::ostringstream ss;
     ss << code;
     start_line_.push_back(ss.str());
     start_line_.push_back(message);
 }
 
-bool isValidVersion(std::string version) {
+bool HttpResponse::isValidVersion(std::string version) {
     if (version != "HTTP/1.1")
         return false;
     return true;
 }
 
-bool isValidMethod(std::string method) {
-    if (method != "GET" || method != "POST" || method != "DELETE")
+bool HttpResponse::isValidMethod(std::string method) {
+    if (method == "GET" || method == "POST" || method == "DELETE")
         return false;
     return true;
 }
 
-bool isValidPath(std::string resourse_path) {
+bool HttpResponse::isValidPath(std::string resourse_path) {
     std::string root = "./www";
     if (resourse_path == "/")
         resourse_path = "/index.html";

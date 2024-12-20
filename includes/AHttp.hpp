@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:29:07 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/19 17:45:51 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 19:15:31 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ class AHttp {
         virtual std::vector<std::string> getStartLine() const = 0;
         virtual std::map<std::string, std::string> getHeader() const = 0;
         virtual std::string getBody() const = 0;
+        class 
 };
 
 #endif
