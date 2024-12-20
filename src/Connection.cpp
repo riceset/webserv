@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/19 22:51:45 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 12:23:00 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,9 @@ void Connection::writeSocket() {
     ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
     if (wlen == -1)
         throw std::runtime_error("send failed");
+    /* remove Http request instance from connection */
+    if (request_)
+        delete request_;
     /* remove the data that was sent */
     wbuff_.erase(0, wlen);
 }

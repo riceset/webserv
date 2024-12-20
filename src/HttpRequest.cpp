@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/19 22:09:36 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/20 13:14:43 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,10 @@ HttpRequest::HttpRequest() {}
 HttpRequest::~HttpRequest() {}
 
 HttpRequest::HttpRequest(std::string request) {
+    start_line_.resize(3);
     start_line_ = parseRequestStartLine(request);
     headers_ = parseRequestHeader(request);
-    /* body_ = parseRequestBody(request); */
+    body_ = parseRequestBody(request);
 }
 
 std::vector<std::string> HttpRequest::getStartLine() const {
@@ -78,3 +79,5 @@ std::string HttpRequest::parseRequestBody(std::string request) {
     std::string body = request.substr(request.find("\r\n\r\n") + 4);
     return body;
 }
+
+
