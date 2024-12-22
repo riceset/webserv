@@ -1,0 +1,39 @@
+#pragma once
+#include "BaseConf.hpp"
+#include <map>
+#include <iostream>
+
+class LocConf : public BaseConf {
+private:
+	std::string _path;
+	std::vector<std::string> _limit_except;
+	std::vector<std::string> _return;
+	bool _autoindex;
+	std::vector<std::string> _index;
+	std::string _root;
+	std::string _client_max_body_size;
+	std::vector<LocConf> _locations;
+
+	// handler
+	typedef void (LocConf::*handler_directive_t)(std::vector<std::string>);
+	std::map<std::string, handler_directive_t> _handler_directive;
+
+
+public:
+	LocConf(std::string content, std::string path);
+	~LocConf();
+
+	virtual void param(std::string content);
+
+	// set methods
+	void set_limit_except(std::vector<std::string> tokens);
+	void set_return(std::vector<std::string> tokens);
+	void set_autoindex(std::vector<std::string> tokens);
+	void set_index(std::vector<std::string> tokens);
+	void set_root(std::vector<std::string> tokens);
+	void set_client_max_body_size(std::vector<std::string> tokens);
+	void handle_location_block(std::vector<std::string> tokens);
+
+	// debug
+	void debug_print();
+};
