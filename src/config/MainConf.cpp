@@ -20,9 +20,6 @@ void MainConf::param(std::string conf_content) {
 
 		try {
 			int result = BaseConf::parse_token(conf_content, tokens, pos);
-			if (result == CONF_ERROR) {
-				throw std::runtime_error("token error");
-			}
 			if (result == CONF_EOF) {
 				break;
 			}
@@ -32,7 +29,12 @@ void MainConf::param(std::string conf_content) {
 		}
 
 		if (!tokens.empty() && _handler_directive.find(tokens[0]) != _handler_directive.end()) {
-			(this->*_handler_directive[tokens[0]])(tokens);
+			try {
+				(this->*_handler_directive[tokens[0]])(tokens);
+			}
+			catch (std::runtime_error &e) {
+				throw std::runtime_error("directive error");
+			}
 		}
 	}
 }
@@ -51,6 +53,7 @@ void MainConf::handle_server_block(std::vector<std::string> tokens) {
 	_servers.push_back(ServConf(tokens[1]));
 }
 
+// debug
 void MainConf::debug_print() {
 	for (size_t i = 0; i < _servers.size(); i++) {
 		std::cout << "server " << i << ":" << std::endl;

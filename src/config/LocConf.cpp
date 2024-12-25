@@ -34,9 +34,6 @@ void LocConf::param(std::string content) {
 
 		try {
 			int result = BaseConf::parse_token(content, tokens, pos);
-			if (result == CONF_ERROR) {
-				throw std::runtime_error("token error");
-			}
 			if (result == CONF_EOF) {
 				break;
 			}
@@ -50,7 +47,12 @@ void LocConf::param(std::string content) {
 		}
 
 		if (_handler_directive.find(tokens[0]) != _handler_directive.end()) {
-			(this->*_handler_directive[tokens[0]])(tokens);
+			try {
+				(this->*_handler_directive[tokens[0]])(tokens);
+			}
+			catch (std::runtime_error &e) {
+				throw std::runtime_error("directive error");
+			}
 		}
 	}
 }

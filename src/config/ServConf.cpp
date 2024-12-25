@@ -138,4 +138,3 @@ void ServConf::debug_print() {
 
 	std::cout << std::endl;
 }
-
