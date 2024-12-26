@@ -6,13 +6,14 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 18:51:06 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/26 23:23:50 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Listener.hpp"
 #include "Connection.hpp"
 #include "EpollWrapper.hpp"
+#include "ConnectionWrapper.hpp"
 #include <iostream>
 #include <map>
 #include <stdexcept>
@@ -21,54 +22,70 @@
 #include <cstring>
 #include <unistd.h> 
 #include <sys/epoll.h>
+#include <algorithm>
 
 int main() {
     try {
         Listener listener(8080);
         EpollWrapper epollWrapper(100);
         epollWrapper.addEvent(listener.getFd());
-        std::map<int, Connection*> connections;
+        ConnectionWrapper connections;
         while (true) {
             int nfds = epollWrapper.epwait();
             for (int i = 0; i < nfds; ++i) {
-                int eventFd = epollWrapper.getEventsList()[i].data.fd;
-                uint32_t ev = epollWrapper.getEventsList()[i].events;
-                if (eventFd == listener.getFd()) {
+                struct epoll_event current_event = epollWrapper[i];
+                std::cout << "Event on fd=" << current_event.data.fd << std::endl;
+                if (current_event.data.fd == listener.getFd()) {
+                    std::cout << "Accepting connection" << std::endl;
                     try {
                         Connection* newConn = new Connection(listener.getFd());
-                        connections[newConn->getFd()] = newConn;
                         epollWrapper.addEvent(newConn->getFd());
+                        connections.addConnection(newConn);
                     } catch (const std::exception &e) {
                         std::cerr << "Accept failed: " << e.what() << std::endl;
                     }
-                } else if(connections.find(eventFd) != connections.end()) {
-                    if (ev & EPOLLIN) {
+                } else {
+                    std::cout << "Handling connection fd=" << current_event.data.fd << std::endl;
+                    Connection* conn = connections.getConnection(current_event.data.fd);
+                    if (!conn) {
+                        std::cerr << "Connection not found" << std::endl;
+                        continue;
+                    }
+                    if (current_event.events & EPOLLIN) {
+                        std::cout << "Reading from connection fd = " << current_event.data.fd << std::endl;
                         try {
-                            connections[eventFd]->second->readSocket();
-                            ev = EPOLLOUT;
+                            conn->readSocket();
+                            epollWrapper.setEvent(conn->getFd(), EPOLLOUT);
+                            std::cout << "Completed reading from connection fd = " << current_event.data.fd << std::endl;
                         } catch (const std::runtime_error &re) {
-                            epollWrapper.deleteEvent(eventFd);
-                            close(connections[eventFd]->getFd());
-                            delete connections[eventFd]->second;
+                            epollWrapper.deleteEvent(current_event.data.fd);
+                            connections.removeConnection(current_event.data.fd);
                             std::cout << "Read error: " << re.what() << std::endl;
                         }
-                    } else if (ev & EPOLLOUT) {
+                    } else if (current_event.events & EPOLLOUT) {
+                            std::cout << "Writing to connection fd = " << current_event.data.fd<< std::endl;
                         try {
-                            connections[eventFd]->second->writeSocket();
-                            ev = EPOLLIN;
+                            conn->writeSocket();
+                            epollWrapper.setEvent(conn->getFd(), EPOLLIN);
+                            std::cout << "Completed writing to connection fd = " << current_event.data.fd<< std::endl;
                         } catch (const std::runtime_error &re) {
-                            epollWrapper.deleteEvent(eventFd);
-                            close(connections[eventFd]->getFd());
-                            delete connections[eventFd]->second;
+                            epollWrapper.deleteEvent(current_event.data.fd);
+                            connections.removeConnection(current_event.data.fd);
                             std::cout << "Write error: " << re.what() << std::endl;
                         }
-                    } else if (ev & (EPOLLERR | EPOLLHUP)) {
-                        // コネクションを閉じる
-                        std::cerr << "Error or hangup on connection fd=" << eventFd << std::endl;
-                        epollWrapper.deleteEvent(eventFd);
-                        close(connections[eventFd]->getFd());
-                        delete connections[eventFd];
-                    }
+                    } else if (current_event.events & (EPOLLERR | EPOLLHUP)) {
+                        std::cerr << "Error or hangup on connection fd=" << current_event.data.fd<< std::endl;
+                        epollWrapper.deleteEvent(current_event.data.fd);
+                        close(conn->getFd());
+                        delete conn;
+                    } else {
+                        if (conn->isTimedOut()) {
+                            std::cerr << "Connection timed out" << std::endl;
+                            epollWrapper.deleteEvent(current_event.data.fd);
+                            close(conn->getFd());
+                            delete conn;
+                        }
+                    } 
                 }
             }
         }

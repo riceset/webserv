@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 16:40:12 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 19:13:59 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/22 22:25:12 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ class HttpResponse : public AHttp {
     private:
         std::vector<std::string> setResponseStartLine(std::vector<std::string> requestStartLine);
         std::map<std::string, std::string> setResponseHeader(std::map<std::string, std::string> requestHeader);
-        std::string setResponseBody(std::string requestBody);
+        std::string setResponseBody(std::vector<std::string> requestStartLine);
         HttpResponse();
         static std::map<int, std::string> status_code_;
     public:
@@ -32,7 +32,9 @@ class HttpResponse : public AHttp {
         bool isValidVersion(std::string version);
         bool isValidMethod(std::string method);
         bool isValidPath(std::string resourse_path);
-        void setStatusCodes(int, std::string, std::vector<std::string> &start_line);
+        void setStatusCode(int, std::string, std::vector<std::string> &start_line);
+        static void initializeStatusCodes();
+        std::string setDate();
 };
 
 #endif

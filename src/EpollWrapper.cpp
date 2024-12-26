@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:29:33 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 00:26:58 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/22 23:17:12 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 EpollWrapper::EpollWrapper() {}
 
 EpollWrapper::EpollWrapper(int max_events) {
-    epfd_ = epoll_create(0);
+    epfd_ = epoll_create(max_events);
     if (epfd_ == -1)
         throw std::runtime_error("Failed to create epoll instance"); 
     events_list_.resize(max_events);
@@ -57,4 +57,15 @@ int EpollWrapper::epwait() {
     return nfds;
 }
 
+struct epoll_event &EpollWrapper::operator[](size_t index) {
+    return events_list_[index];
+}
+
+void EpollWrapper::setEvent(int fd, uint32_t events) {
+    struct epoll_event new_event;
+    new_event.events = events;
+    new_event.data.fd = fd;
+    if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &new_event) == -1)
+        throw std::runtime_error("Failed to modify event in epoll instance");
+}
 

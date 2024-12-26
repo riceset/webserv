@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 19:03:40 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/26 22:55:04 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,10 @@ class Connection: public ASocket {
         std::string getWbuff() const;
         HttpRequest *getRequest() const;
         bool isTimedOut();
+        void buildResponseString();
 };
 
+/* Connection *getConnection(std::vector<Connection *> &connections, int fd); */
+std::string vecToString(std::vector<std::string> vec);
+std::string mapToString(std::map<std::string, std::string>);
 #endif

@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 19:14:18 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/24 20:41:31 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,14 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <sstream>
+#include <fstream>
+#include <stdexcept>
+#include <iostream>
+#include <ctime>
 
-std::map<int, std::string> HttpResponse::status_code = {
-    {200, "OK"},
-    {404, "Not Found"},
-    {501, "Not Implemented"}
-}
+std::map<int, std::string> HttpResponse::status_code_;
 
 HttpResponse::HttpResponse() {}
 
@@ -31,9 +33,10 @@ HttpResponse::~HttpResponse() {}
 
 HttpResponse::HttpResponse(HttpRequest *request) {
     start_line_.resize(3);
+    initializeStatusCodes();
     start_line_ = setResponseStartLine(request->getStartLine());
+    body_ = setResponseBody(request->getStartLine());
     headers_ = setResponseHeader(request->getHeader());
-    body_ = setResponseBody(request->getBody());
 }
 
 std::vector<std::string> HttpResponse::setResponseStartLine(std::vector<std::string> requestStartLine) {
@@ -55,11 +58,58 @@ std::vector<std::string> HttpResponse::setResponseStartLine(std::vector<std::str
     return start_line;
 }
 
+std::string HttpResponse::setDate() {
+    std::time_t now = std::time(NULL);
+    std::string date = std::ctime(&now);
+    std::vector<std::string> date_vec;
+    std::stringstream ss(date);
+    char space = ' ';
+    while (getline(ss, date, space)) {
+        if (!date.empty() && date != "\n")
+            date_vec.push_back(date);
+    }
+    date_vec[4] = date_vec[4].substr(0, date_vec[4].size() - 1);
+    std::string date_str = date_vec[0] + ", " + date_vec[2] + " " + date_vec[1] + " " + date_vec[4] + " " + date_vec[3] + " GMT";
+    return date_str;
+}
+
+std::map<std::string, std::string> HttpResponse::setResponseHeader(std::map<std::string, std::string> requestHeader) {
+    (void)requestHeader;
+    std::map<std::string, std::string> headers;
+    headers["Date"] = setDate();
+    headers["Server"] = "localhost";
+    headers["Content-Type"] = "text/html";
+    headers["Connection"] = "keep-alive";
+    headers["Keep-Alive"] = "timeout=5, max=1000";
+    std::size_t body_length = body_.size();
+    std::ostringstream ss;
+    ss << body_length;
+    headers["Content-Length"] = ss.str();
+    return headers;
+}
+
+std::string HttpResponse::setResponseBody(std::vector<std::string> requestStartLine) {
+    std::string root = "./www";
+    std::string requestedpath = requestStartLine[1];
+    if (requestedpath == "/")
+        requestedpath = "/index.html";
+    std::string filepath = root + requestedpath;
+    std::string body;
+    std::ifstream ifs(filepath.c_str());
+    if (ifs.fail())
+        throw std::runtime_error("Failed to open file");
+    std::string line;
+    while (std::getline(ifs, line))
+        body += line;
+    ifs.close();
+    return body;
+}
+
 void HttpResponse::setStatusCode(int code, std::string message, std::vector<std::string> &start_line) {
     std::ostringstream ss;
     ss << code;
-    start_line_.push_back(ss.str());
-    start_line_.push_back(message);
+    start_line.push_back(ss.str());
+    start_line.push_back(message);
 }
 
 bool HttpResponse::isValidVersion(std::string version) {
@@ -70,8 +120,8 @@ bool HttpResponse::isValidVersion(std::string version) {
 
 bool HttpResponse::isValidMethod(std::string method) {
     if (method == "GET" || method == "POST" || method == "DELETE")
-        return false;
-    return true;
+        return true;
+    return false;
 }
 
 bool HttpResponse::isValidPath(std::string resourse_path) {
@@ -97,3 +147,8 @@ std::string HttpResponse::getBody() const {
     return body_;
 }
 
+void HttpResponse::initializeStatusCodes() {
+    status_code_[200] = "OK";
+    status_code_[404] = "Not Found";
+    status_code_[501] = "Not Implemented";
+}
