@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 16:40:12 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/22 22:25:12 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/27 13:57:45 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class HttpResponse : public AHttp {
         void setStatusCode(int, std::string, std::vector<std::string> &start_line);
         static void initializeStatusCodes();
         std::string setDate();
+        int checkStatusCode(std::vector<std::string> requestStartLine);
 };
 
 #endif
