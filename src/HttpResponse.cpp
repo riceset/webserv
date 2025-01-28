@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/27 14:20:38 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/27 20:09:38 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,17 +60,17 @@ int HttpResponse::checkStatusCode(std::vector<std::string> requestStartLine) {
 
 std::vector<std::string> HttpResponse::setResponseStartLine(std::vector<std::string> requestStartLine) {
     std::vector<std::string> start_line;
-    int code = checkStatusCode(requestStartLine);
-    switch (code) {
-        case 200:
-            setStatusCode(200, status_code_[200], start_line);
-            break;
-        case 404:
-            setStatusCode(404, status_code_[404], start_line);
-            break;
-        case 501:
-            setStatusCode(501, status_code_[501], start_line);
-            break;
+    bool is_valid_method = isValidMethod(requestStartLine[0]);
+    bool is_valid_path = isValidPath(requestStartLine[1]);
+    if (isValidVersion(requestStartLine[2]))
+        start_line.push_back(requestStartLine[2]);
+    else
+        throw std::runtime_error("Invalid HTTP version");
+    if (is_valid_method == false) {
+        setStatusCode(501, status_code_[501], start_line);
+        return start_line;
+    } else if (is_valid_path == false) {
+        setStatusCode(404, status_code_[404], start_line);
     }
     return start_line;
 }

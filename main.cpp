@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/26 23:23:50 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2024/12/27 20:41:30 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,9 @@
 
 int main() {
     try {
+        /* call config process */
         Listener listener(8080);
+        Listener listener2(8081);
         EpollWrapper epollWrapper(100);
         epollWrapper.addEvent(listener.getFd());
         ConnectionWrapper connections;
@@ -45,7 +47,6 @@ int main() {
                         std::cerr << "Accept failed: " << e.what() << std::endl;
                     }
                 } else {
-                    std::cout << "Handling connection fd=" << current_event.data.fd << std::endl;
                     Connection* conn = connections.getConnection(current_event.data.fd);
                     if (!conn) {
                         std::cerr << "Connection not found" << std::endl;
