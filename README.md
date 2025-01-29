@@ -1,7 +1,7 @@
 # webserv
 Ce projet vous demandera d'écrire votre propre serveur HTTP. Vous devrez suivre la RFC d'HTTP et vous serez donc capable de tester avec un vrai browser web. HTTP est un des protocoles les plus utilisés sur internet. Connaitre son fonctionnement sera plus qu'utile même si vous ne faites pas de web à la fin.
 
-このプロジェクトでは、自分でHTTPサーバーを作成することが求められます。HTTPのRFCに従って実装を行い、実際のウェブブラウザでテストできるようになります。HTTPはインターネットで最も広く使われているプロトコルの1つです。その仕組みを理解することは、たとえウェブ開発をしなくても非常に役立つ知識になります。
+このプロジェクトでは、自分でHTTPサーバーをHTTPのRFCに従って実装します。
 
 
 ## GitHub ブランチ運用方法
@@ -23,3 +23,27 @@ Ce projet vous demandera d'écrire votre propre serveur HTTP. Vous devrez suivre
 5. レビュー後、**main** ブランチにマージします。
 
 ---
+
+## Formatterの規約
+
+本プロジェクトでは、コードの整形に `clang-format` を使用しています。以下の規約に従ってコードを整形してください。
+
+### 使用するスタイル
+
+`clang-format` は **Googleスタイル** を基準にしています。
+
+### 設定ファイル
+
+プロジェクトルートに配置された `.clang-format` ファイルを使用してコードの整形を行います。この設定ファイルには、インデント、改行、括弧の配置方法などが設定されています。
+
+### コード整形の実行
+
+コード整形は、以下のコマンドで実行できます。
+
+```bash
+make format
+```
+
+### GitHub Actionsによる整形チェック
+main ブランチにマージする際、GitHub Actions で clang-format のフォーマットチェックが自動的に実行されます。エラーを無視してマージすることもできますが、できるだけ main ブランチは整形された状態を保ってください。
+
