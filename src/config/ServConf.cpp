@@ -124,6 +124,7 @@ void ServConf::set_client_max_body_size(std::vector<std::string> tokens)
 	if(_client_max_body_size.empty())
 	{
 		_client_max_body_size = tokens[1];
+				char c = "a";
 	}
 	else
 	{
