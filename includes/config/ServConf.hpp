@@ -1,10 +1,12 @@
 #pragma once
-#include "BaseConf.hpp"
-#include "LocConf.hpp"
 #include <iostream>
 #include <map>
 
-class ServConf : public BaseConf {
+#include "BaseConf.hpp"
+#include "LocConf.hpp"
+
+class ServConf : public BaseConf
+{
 private:
 	// value
 	std::string _listen;
@@ -16,7 +18,8 @@ private:
 	std::vector<LocConf> _locations;
 
 	// handler
-	std::map<std::string, void (ServConf::*)(std::vector<std::string>)> _handler_directive;
+	std::map<std::string, void (ServConf::*)(std::vector<std::string>)>
+		_handler_directive;
 
 public:
 	ServConf(std::string content);

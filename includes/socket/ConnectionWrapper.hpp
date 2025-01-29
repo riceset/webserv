@@ -11,22 +11,25 @@
 /* ************************************************************************** */
 
 #ifndef CONNECTIONWRAPPER_HPP
-# define CONNECTIONWRAPPER_HPP
+#define CONNECTIONWRAPPER_HPP
 
-# include "Connection.hpp"
-#include <vector>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+#include <vector>
 
-class ConnectionWrapper {
-    private:
-        std::vector<Connection *> connections_;
-    public:
-        ConnectionWrapper();
-        ~ConnectionWrapper();
-        Connection *getConnection(int fd) const;
-        void removeConnection(int fd);
-        void addConnection(Connection *conn);
+#include "Connection.hpp"
+
+class ConnectionWrapper
+{
+private:
+	std::vector<Connection *> connections_;
+
+public:
+	ConnectionWrapper();
+	~ConnectionWrapper();
+	Connection *getConnection(int fd) const;
+	void removeConnection(int fd);
+	void addConnection(Connection *conn);
 };
 
 #endif

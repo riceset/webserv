@@ -1,9 +1,11 @@
 #pragma once
-#include "BaseConf.hpp"
-#include "ServConf.hpp"
 #include <map>
 
-class MainConf : public BaseConf {
+#include "BaseConf.hpp"
+#include "ServConf.hpp"
+
+class MainConf : public BaseConf
+{
 private:
 	// server
 	std::vector<ServConf> _servers;

@@ -1,9 +1,11 @@
 #pragma once
-#include "BaseConf.hpp"
-#include <map>
 #include <iostream>
+#include <map>
 
-class LocConf : public BaseConf {
+#include "BaseConf.hpp"
+
+class LocConf : public BaseConf
+{
 private:
 	std::string _path;
 	std::vector<std::string> _limit_except;
@@ -17,7 +19,6 @@ private:
 	// handler
 	typedef void (LocConf::*handler_directive_t)(std::vector<std::string>);
 	std::map<std::string, handler_directive_t> _handler_directive;
-
 
 public:
 	LocConf(std::string content, std::string path);
