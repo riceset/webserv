@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 12:23:00 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 19:58:43 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-
 #include <iostream>
 #include <stdexcept>
-
 #include "ASocket.hpp"
 
 Connection::Connection() : ASocket() {}

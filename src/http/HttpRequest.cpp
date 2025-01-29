@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 13:14:43 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 19:57:26 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,12 @@ HttpRequest::HttpRequest() {}
 
 HttpRequest::~HttpRequest() {}
 
-HttpRequest::HttpRequest(std::string request)
-{
-	start_line_.resize(3);
-	start_line_ = parseRequestStartLine(request);
-	headers_ = parseRequestHeader(request);
-	body_ = parseRequestBody(request);
+/* Constructor */
+HttpRequest::HttpRequest(std::string request) {
+    start_line_.resize(3);
+    start_line_ = parseRequestStartLine(request);
+    headers_ = parseRequestHeader(request);
+    body_ = parseRequestBody(request);
 }
 
 std::vector<std::string> HttpRequest::getStartLine() const
@@ -45,33 +45,29 @@ std::string HttpRequest::getBody() const
 	return body_;
 }
 
-std::vector<std::string> HttpRequest::parseRequestStartLine(std::string request)
-{
-	std::string first_line = request.substr(0, request.find("\r\n"));
-	std::istringstream ss(first_line);
-	std::vector<std::string> start_line;
-
-	while(ss)
-	{
-		std::string token;
-		std::getline(ss, token, ' ');
-		if(!token.empty())
-			start_line.push_back(token);
-	}
-	return start_line;
+/* Parse StartLine of the request */
+std::vector<std::string> HttpRequest::parseRequestStartLine(std::string request) {
+    std::string first_line = request.substr(0, request.find("\r\n"));
+    std::istringstream ss(first_line);
+    std::vector<std::string> start_line;
+    while (ss) {
+        std::string token;
+        std::getline(ss, token, ' ');
+        if (!token.empty())
+            start_line.push_back(token);
+    }
+    return start_line;
 }
 
-std::map<std::string, std::string> HttpRequest::parseRequestHeader(
-	std::string request)
-{
-	std::map<std::string, std::string> header;
-	size_t start = request.find("\r\n") + 2;
-	size_t end = request.find("\r\n\r\n");
-	if(start > end)
-		throw std::runtime_error("Header not found");
-	std::string header_str = request.substr(start, end - start);
-	std::istringstream ss(header_str);
-
+/* Parse Header of the request */
+std::map<std::string, std::string> HttpRequest::parseRequestHeader(std::string request) {
+    std::map<std::string, std::string> header;
+    size_t start = request.find("\r\n") + 2;
+    size_t end = request.find("\r\n\r\n");
+    if (start > end)
+        throw std::runtime_error("Header not found");
+    std::string header_str = request.substr(start, end - start);
+    std::istringstream ss(header_str);
 	while(true)
 	{
 		std::string line;
@@ -85,8 +81,8 @@ std::map<std::string, std::string> HttpRequest::parseRequestHeader(
 	return header;
 }
 
-std::string HttpRequest::parseRequestBody(std::string request)
-{
-	std::string body = request.substr(request.find("\r\n\r\n") + 4);
-	return body;
+/* Parse Body of the request */
+std::string HttpRequest::parseRequestBody(std::string request) {
+    std::string body = request.substr(request.find("\r\n\r\n") + 4);
+    return body;
 }

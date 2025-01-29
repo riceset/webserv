@@ -6,20 +6,17 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 14:22:52 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 20:01:47 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpResponse.hpp"
-
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
 #include <map>
 #include <string>
 #include <vector>
-
 #include "HttpRequest.hpp"
 
 HttpResponse::HttpResponse()

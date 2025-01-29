@@ -1,5 +1,6 @@
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+DEBUGFLAGS = -g -fsanitize=address
 NAME = a.out
 SRC = $(shell find $(SRCDIR) -name "*.cpp") main.cpp
 OBJ = $(SRC:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
@@ -7,6 +8,12 @@ SRCDIR = src
 OBJDIR = objs
 INCLUDEDIR = includes
 INCLUDE = -I $(INCLUDEDIR)
+TESTDIR = test
+TESTSRC = $(shell find $(TESTDIR) -name "*.cpp")
+TESTOBJ = $(TESTSRC:$(TESTDIR)/%.cpp=$(TESTOBJDIR)/%.o)
+TESTOBJDIR = testobjs
+TESTNAME = testprog
+DEBUFNAME = debug
 
 all: $(NAME)
 
@@ -29,6 +36,38 @@ fclean: clean
 
 re: fclean all
 
+debug: $(OBJ)
+	@$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(OBJ) $(INCLUDE) -o $(DEBUFNAME)
+	@echo "Compilation done: $(DEBUFNAME)"
+
+debugclean:
+	@rm -rf $(DEBUFNAME)
+	@echo "Debug executable deleted."
+
+debugfclean: debugclean
+	@rm -rf $(OBJDIR)
+	@echo "Debug object files deleted."
+
+debugre: debugfclean debug
+
+test: $(TESTOBJ)
+	@$(CXX) $(CXXFLAGS) $(TESTOBJ) $(INCLUDE) -o $(TESTNAME) 
+	@echo "Compilation done: test"
+
+$(TESTOBJDIR)/%.o: $(TESTDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+	@echo "Compiled: $< -> $@"
+
+testclean:
+	@rm -rf $(TESTOBJDIR)
+	@echo "Test object files deleted."
+
+testfclean: testclean
+	@rm -rf testprog
+	@echo "Test executable deleted."
+
+testre: testfclean test
 # docker command section
 
 # Paths
