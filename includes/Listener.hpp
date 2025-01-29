@@ -11,17 +11,19 @@
 /* ************************************************************************** */
 
 #ifndef LISTENER_HPP
-# define LISTENER_HPP
+#define LISTENER_HPP
 
 #include "ASocket.hpp"
 
-class Listener : public ASocket {
-    private:
-        Listener();
-    public:
-        Listener(int port);
-        ~Listener();
-        int getFd() const;
+class Listener : public ASocket
+{
+private:
+	Listener();
+
+public:
+	Listener(int port);
+	~Listener();
+	int getFd() const;
 };
 
 #endif

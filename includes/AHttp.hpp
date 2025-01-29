@@ -11,23 +11,25 @@
 /* ************************************************************************** */
 
 #ifndef AHTTP_HPP
-# define AHTTP_HPP
+#define AHTTP_HPP
 
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
 
-class AHttp {
-    protected:
-        std::vector<std::string> start_line_;
-        std::map<std::string, std::string> headers_;
-        std::string body_;
-    public:
-        AHttp();
-        virtual ~AHttp() = 0;
-        virtual std::vector<std::string> getStartLine() const = 0;
-        virtual std::map<std::string, std::string> getHeader() const = 0;
-        virtual std::string getBody() const = 0;
+class AHttp
+{
+protected:
+	std::vector<std::string> start_line_;
+	std::map<std::string, std::string> headers_;
+	std::string body_;
+
+public:
+	AHttp();
+	virtual ~AHttp() = 0;
+	virtual std::vector<std::string> getStartLine() const = 0;
+	virtual std::map<std::string, std::string> getHeader() const = 0;
+	virtual std::string getBody() const = 0;
 };
 
 #endif

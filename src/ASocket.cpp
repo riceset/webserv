@@ -11,11 +11,13 @@
 /* ************************************************************************** */
 
 #include "ASocket.hpp"
+
 #include <cstring>
 
-ASocket::ASocket() {
-    fd_ = 0;
-    std::memset(&addr_, 0, sizeof(addr_));
+ASocket::ASocket()
+{
+	fd_ = 0;
+	std::memset(&addr_, 0, sizeof(addr_));
 }
 
 ASocket::~ASocket() {}

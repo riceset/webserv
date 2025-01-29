@@ -11,10 +11,10 @@
 /* ************************************************************************** */
 
 #ifndef ASOCKET_HPP
-# define ASOCKET_HPP
+#define ASOCKET_HPP
 
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 /* this is socket addres structure */
 /* struct sockaddr_in { */
@@ -29,15 +29,16 @@
 /* typedef unsigned short int sa_family_t; */
 /* typedef uint16_t in_port_t; */
 
-class ASocket {
-    protected:
-        int fd_;
-        struct sockaddr_in addr_;
-    public:
-        ASocket();
-        virtual ~ASocket() = 0;
-        virtual int getFd() const = 0;
-};
+class ASocket
+{
+protected:
+	int fd_;
+	struct sockaddr_in addr_;
 
+public:
+	ASocket();
+	virtual ~ASocket() = 0;
+	virtual int getFd() const = 0;
+};
 
 #endif

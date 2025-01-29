@@ -11,29 +11,32 @@
 /* ************************************************************************** */
 
 #ifndef ACCELPTOR_HPP
-# define ACCELPTOR_HPP
+#define ACCELPTOR_HPP
+
+#include <string>
 
 #include "ASocket.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
-#include <string>
 
-class Connection: public ASocket {
-    private:
-        Connection();
-        std::string rbuff_;
-        std::string wbuff_;
-        HttpRequest *request_;
-        HttpResponse *response_;
-    public:
-        Connection(int clinentFd);
-        ~Connection();
-        int getFd() const;
-        void readSocket();
-        void writeSocket();
-        std::string getRbuff() const;
-        std::string getWbuff() const;
-        HttpRequest *getRequest() const;
+class Connection : public ASocket
+{
+private:
+	Connection();
+	std::string rbuff_;
+	std::string wbuff_;
+	HttpRequest *request_;
+	HttpResponse *response_;
+
+public:
+	Connection(int clinentFd);
+	~Connection();
+	int getFd() const;
+	void readSocket();
+	void writeSocket();
+	std::string getRbuff() const;
+	std::string getWbuff() const;
+	HttpRequest *getRequest() const;
 };
 
 #endif

@@ -67,3 +67,7 @@ remove-images:
 	docker image prune -a -f
 
 .PHONY: all clean fclean re
+
+format:
+	@echo "Formatting code..."
+	@clang-format -i $(SRC) $(INCLUDEDIR)/*.hpp
