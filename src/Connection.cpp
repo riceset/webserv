@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/26 23:18:52 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 15:00:38 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ std::time_t Connection::timeout_ = 60;
 
 Connection::Connection() : ASocket() {}
 
+/* Connection constructor */
 Connection::Connection(int listenerFd) : ASocket() {
     /* make a new socket for the client */
     socklen_t len = sizeof(addr_);
@@ -45,6 +46,7 @@ int Connection::getFd() const {
     return fd_;
 }
 
+/* Check whether the connection is timed out */
 bool Connection::isTimedOut() {
     std::time_t now = std::time(NULL);
     std::cout << "now: " << now << std::endl;
@@ -54,10 +56,8 @@ bool Connection::isTimedOut() {
     return false;
 }
 
+/* Reading Http request from the socket */
 void Connection::readSocket() {
-    /* if (isTimedOut()) */
-    /*     throw std::runtime_error("Connection timed out"); */
-    /* read from the client */
     char buff[1024];
     ssize_t rlen = recv(fd_, buff, sizeof(buff) - 1, 0);
     if (rlen < 0) {
@@ -66,16 +66,16 @@ void Connection::readSocket() {
         }
         throw std::runtime_error("recv failed");
     } else if (rlen == 0) {
-        throw std::runtime_error("Connection closed by client");
+        if (isTimedOut())
+            throw std::runtime_error("Timed out, Connection closed by client");
+        return;
     }
     buff[rlen] = '\0';
     rbuff_ += buff;
-    /* std::cout << "-----------Request---------------" << std::endl; */
-    /* std::cout <<  rbuff_ << std::endl; */
-    /* std::cout << "---------------------------------" << std::endl; */
     request_ = new HttpRequest(rbuff_);
 }
 
+/* Writing Http response to the socket */
 void Connection::writeSocket() {
     if (!request_) {
         throw std::runtime_error("No request found");
@@ -83,10 +83,6 @@ void Connection::writeSocket() {
     try {
         response_ = new HttpResponse(request_);
         buildResponseString();
-        /* std::cout << "-----------Response--------------" << std::endl; */
-        /* std::cout << wbuff_ << std::endl; */
-        /* std::cout << "---------------------------------" << std::endl; */
-        /* write to the client */
         ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
         if (wlen == -1)
             throw std::runtime_error("send failed");
@@ -95,8 +91,7 @@ void Connection::writeSocket() {
             delete request_;
         request_ = NULL;
         /* remove Http response instance from connection */
-        if (response_)
-            delete response_;
+        delete response_;
         response_ = NULL;
         /* remove the data that was sent */
         wbuff_.erase(0, wlen);
@@ -133,6 +128,7 @@ HttpRequest *Connection::getRequest() const {
 /*     return NULL; */
 /* } */
 
+/* Build Http response string */
 void Connection::buildResponseString() {
     std::string startLine = vecToString(response_->getStartLine());
     std::string header = mapToString(response_->getHeader());
@@ -140,6 +136,7 @@ void Connection::buildResponseString() {
     wbuff_ = startLine + "\r\n" + header + "\r\n" + body;
 }
 
+/* Convert vector to string */
 std::string vecToString(std::vector<std::string> vec) {
     std::string str;
     for (std::vector<std::string>::iterator it = vec.begin(); it != vec.end(); ++it) {
@@ -149,6 +146,7 @@ std::string vecToString(std::vector<std::string> vec) {
     return str;
 }
 
+/* Convert map to string */
 std::string mapToString(std::map<std::string, std::string> mapdata) {
     std::string str;
     for (std::map<std::string, std::string>::iterator it = mapdata.begin(); it != mapdata.end(); ++it) {

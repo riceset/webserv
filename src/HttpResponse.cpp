@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/27 20:09:38 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 14:54:48 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ HttpResponse::HttpResponse() {}
 
 HttpResponse::~HttpResponse() {}
 
+/* Constructor */
 HttpResponse::HttpResponse(HttpRequest *request) {
     start_line_.resize(3);
     initializeStatusCodes();
@@ -39,6 +40,7 @@ HttpResponse::HttpResponse(HttpRequest *request) {
     headers_ = setResponseHeader(request->getHeader());
 }
 
+/* Make map data of status codes and messages */
 void HttpResponse::initializeStatusCodes() {
     status_code_[200] = "OK";
     status_code_[400] = "Bad Request";
@@ -48,6 +50,7 @@ void HttpResponse::initializeStatusCodes() {
     status_code_[501] = "Not Implemented";
 }
 
+/* Check whether the status code is valid */
 int HttpResponse::checkStatusCode(std::vector<std::string> requestStartLine) {
     if (!isValidMethod(requestStartLine[0]))
         return 501;
@@ -58,6 +61,7 @@ int HttpResponse::checkStatusCode(std::vector<std::string> requestStartLine) {
     return 200;
 }
 
+/* Set the start line of the response */
 std::vector<std::string> HttpResponse::setResponseStartLine(std::vector<std::string> requestStartLine) {
     std::vector<std::string> start_line;
     bool is_valid_method = isValidMethod(requestStartLine[0]);
@@ -75,12 +79,14 @@ std::vector<std::string> HttpResponse::setResponseStartLine(std::vector<std::str
     return start_line;
 }
 
+/* Check whether the method is valid */
 bool HttpResponse::isValidMethod(std::string method) {
     if (method == "GET" || method == "POST" || method == "DELETE")
         return true;
     return false;
 }
 
+/* Check whether the path is valid */
 bool HttpResponse::isValidPath(std::string resourse_path) {
     std::string root = "./www";
     if (resourse_path == "/")
@@ -92,6 +98,7 @@ bool HttpResponse::isValidPath(std::string resourse_path) {
     return false;
 }
 
+/* Set the date of the response */
 std::string HttpResponse::setDate() {
     std::time_t now = std::time(NULL);
     std::string date = std::ctime(&now);
@@ -107,6 +114,7 @@ std::string HttpResponse::setDate() {
     return date_str;
 }
 
+/* Set the headers of the response */
 std::map<std::string, std::string> HttpResponse::setResponseHeader(std::map<std::string, std::string> requestHeader) {
     (void)requestHeader;
     std::map<std::string, std::string> headers;
@@ -122,6 +130,7 @@ std::map<std::string, std::string> HttpResponse::setResponseHeader(std::map<std:
     return headers;
 }
 
+/* Set the body of the response */
 std::string HttpResponse::setResponseBody(std::vector<std::string> requestStartLine) {
     std::string root = "./www";
     std::string requestedpath = requestStartLine[1];
@@ -139,6 +148,7 @@ std::string HttpResponse::setResponseBody(std::vector<std::string> requestStartL
     return body;
 }
 
+/* Set the status code of the response */
 void HttpResponse::setStatusCode(int code, std::string message, std::vector<std::string> &start_line) {
     std::ostringstream ss;
     ss << code;
@@ -146,12 +156,12 @@ void HttpResponse::setStatusCode(int code, std::string message, std::vector<std:
     start_line.push_back(message);
 }
 
+/* Check whether the version is valid */
 bool HttpResponse::isValidVersion(std::string version) {
     if (version != "HTTP/1.1")
         return false;
     return true;
 }
-
 
 std::vector<std::string> HttpResponse::getStartLine() const {
     return start_line_;

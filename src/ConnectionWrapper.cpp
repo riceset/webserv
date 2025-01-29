@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 22:49:41 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/26 23:05:54 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 14:33:25 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ ConnectionWrapper::~ConnectionWrapper() {
     }
 }
 
+/* Get the connection with the given file descriptor */
 Connection *ConnectionWrapper::getConnection(int fd) const {
     for (unsigned int i = 0; i < connections_.size(); i++) {
         if (connections_[i]->getFd() == fd)
@@ -32,6 +33,7 @@ Connection *ConnectionWrapper::getConnection(int fd) const {
     return NULL;
 }
 
+/* Remove the connection with the given file descriptor */
 void ConnectionWrapper::removeConnection(int fd) {
     for (unsigned int i = 0; i < connections_.size(); i++) {
         if (connections_[i]->getFd() == fd) {
@@ -42,6 +44,7 @@ void ConnectionWrapper::removeConnection(int fd) {
     }
 }
 
+/* Add a connection to the connection list */
 void ConnectionWrapper::addConnection(Connection *conn) {
     connections_.push_back(conn);
 }

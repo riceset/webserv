@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/20 13:14:43 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 14:52:39 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ HttpRequest::HttpRequest() {}
 
 HttpRequest::~HttpRequest() {}
 
+/* Constructor */
 HttpRequest::HttpRequest(std::string request) {
     start_line_.resize(3);
     start_line_ = parseRequestStartLine(request);
@@ -40,11 +41,11 @@ std::string HttpRequest::getBody() const {
     return body_;
 }
 
+/* Parse StartLine of the request */
 std::vector<std::string> HttpRequest::parseRequestStartLine(std::string request) {
     std::string first_line = request.substr(0, request.find("\r\n"));
     std::istringstream ss(first_line);
     std::vector<std::string> start_line;
-
     while (ss) {
         std::string token;
         std::getline(ss, token, ' ');
@@ -54,6 +55,7 @@ std::vector<std::string> HttpRequest::parseRequestStartLine(std::string request)
     return start_line;
 }
 
+/* Parse Header of the request */
 std::map<std::string, std::string> HttpRequest::parseRequestHeader(std::string request) {
     std::map<std::string, std::string> header;
     size_t start = request.find("\r\n") + 2;
@@ -75,6 +77,7 @@ std::map<std::string, std::string> HttpRequest::parseRequestHeader(std::string r
     return header;
 }
 
+/* Parse Body of the request */
 std::string HttpRequest::parseRequestBody(std::string request) {
     std::string body = request.substr(request.find("\r\n\r\n") + 4);
     return body;

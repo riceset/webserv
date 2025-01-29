@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/27 20:41:30 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 15:00:31 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,36 +26,47 @@
 
 int main() {
     try {
-        /* call config process */
+        /* Make Listener, EpollWrapper, ConnectionWrapper */
         Listener listener(8080);
-        Listener listener2(8081);
         EpollWrapper epollWrapper(100);
-        epollWrapper.addEvent(listener.getFd());
         ConnectionWrapper connections;
+        epollWrapper.addEvent(listener.getFd());
+        /* Main loop */
         while (true) {
+            /* Get count of file descriptors registered in epollWrapper */
             int nfds = epollWrapper.epwait();
+            /* Check event of each file descriptor */
             for (int i = 0; i < nfds; ++i) {
+                /* Get current event from epollWrapper */
                 struct epoll_event current_event = epollWrapper[i];
                 std::cout << "Event on fd=" << current_event.data.fd << std::endl;
+                /* If event is on listener, accept new connection */
                 if (current_event.data.fd == listener.getFd()) {
-                    std::cout << "Accepting connection" << std::endl;
                     try {
+                        /* Make new socket and accept new connection */
                         Connection* newConn = new Connection(listener.getFd());
+                        /* Registerd new socket to epollWrapper */
                         epollWrapper.addEvent(newConn->getFd());
+                        /* Add new connection to connections */
                         connections.addConnection(newConn);
                     } catch (const std::exception &e) {
                         std::cerr << "Accept failed: " << e.what() << std::endl;
                     }
+                /* If event is on Connection, read or write data */
                 } else {
+                    /* Get current connection from connections */
                     Connection* conn = connections.getConnection(current_event.data.fd);
                     if (!conn) {
                         std::cerr << "Connection not found" << std::endl;
                         continue;
                     }
+                    /* If event is ready to read, read data from connection */ 
                     if (current_event.events & EPOLLIN) {
                         std::cout << "Reading from connection fd = " << current_event.data.fd << std::endl;
                         try {
+                            /* Read Http request */
                             conn->readSocket();
+                            /* Change State to write */
                             epollWrapper.setEvent(conn->getFd(), EPOLLOUT);
                             std::cout << "Completed reading from connection fd = " << current_event.data.fd << std::endl;
                         } catch (const std::runtime_error &re) {
@@ -63,10 +74,13 @@ int main() {
                             connections.removeConnection(current_event.data.fd);
                             std::cout << "Read error: " << re.what() << std::endl;
                         }
+                    /* If event is ready to write, write data to connection */
                     } else if (current_event.events & EPOLLOUT) {
                             std::cout << "Writing to connection fd = " << current_event.data.fd<< std::endl;
                         try {
+                            /* Write Http response */
                             conn->writeSocket();
+                            /* Change State to read */
                             epollWrapper.setEvent(conn->getFd(), EPOLLIN);
                             std::cout << "Completed writing to connection fd = " << current_event.data.fd<< std::endl;
                         } catch (const std::runtime_error &re) {
@@ -74,11 +88,6 @@ int main() {
                             connections.removeConnection(current_event.data.fd);
                             std::cout << "Write error: " << re.what() << std::endl;
                         }
-                    } else if (current_event.events & (EPOLLERR | EPOLLHUP)) {
-                        std::cerr << "Error or hangup on connection fd=" << current_event.data.fd<< std::endl;
-                        epollWrapper.deleteEvent(current_event.data.fd);
-                        close(conn->getFd());
-                        delete conn;
                     } else {
                         if (conn->isTimedOut()) {
                             std::cerr << "Connection timed out" << std::endl;

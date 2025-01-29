@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:29:33 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/22 23:17:12 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/29 14:35:26 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 
 EpollWrapper::EpollWrapper() {}
 
+/* Epoll constructor with max_events */
 EpollWrapper::EpollWrapper(int max_events) {
     epfd_ = epoll_create(max_events);
     if (epfd_ == -1)
@@ -37,6 +38,7 @@ std::vector<struct epoll_event> EpollWrapper::getEventsList() const {
     return events_list_;
 }
 
+/* Registerd given file descripter to epoll instance */
 void EpollWrapper::addEvent(int fd) {
     struct epoll_event new_event;
     new_event.events = EPOLLIN;
@@ -45,11 +47,13 @@ void EpollWrapper::addEvent(int fd) {
         throw std::runtime_error("Failed to add event to epoll instance");
 }
 
+/* Delete given file descripter from epoll instance */
 void EpollWrapper::deleteEvent(int fd) {
     if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == -1)
         throw std::runtime_error("Failed to delete event from epoll instance");
 }
 
+/* Wait for event */
 int EpollWrapper::epwait() {
     int nfds = epoll_wait(epfd_, events_list_.data(), events_list_.size(), 0);
     if (nfds == -1)
@@ -57,10 +61,12 @@ int EpollWrapper::epwait() {
     return nfds;
 }
 
+/* Operator overloading of [] operator */
 struct epoll_event &EpollWrapper::operator[](size_t index) {
     return events_list_[index];
 }
 
+/* Modify event of given file descripter */
 void EpollWrapper::setEvent(int fd, uint32_t events) {
     struct epoll_event new_event;
     new_event.events = events;
