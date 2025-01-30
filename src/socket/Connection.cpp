@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/30 11:37:18 by atsu             ###   ########.fr       */
+/*   Updated: 2025/01/30 13:35:05 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,7 @@ void Connection::readSocket()
 		return;
 	}
 	buff[rlen] = '\0';
-	std::cout << "buff: " << buff << std::endl;
+	std::cout << "buff: " << buff << std::endl; // デバッグ用
 	rbuff_ += buff;
 	request_ = new HttpRequest(rbuff_);
 }
