@@ -1,22 +1,35 @@
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS += $(addprefix -I, $(INCLUDESUBDIR)) # SUBDIRSの指定を行うため
 DEBUGFLAGS = -g -fsanitize=address
-NAME = a.out
+NAME = webserv
 SRC = $(shell find $(SRCDIR) -type f -name "*.cpp") main.cpp
 OBJ = $(SRC:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 SRCDIR = src
 OBJDIR = objs
-INCLUDEDIR = includes
-INCLUDE = -I $(shell find $(INCLUDEDIR) -type f -name "*.hpp")
-HEADERS = $(shell find $(INCLUDEDIR) -type f -name "*.hpp")
+INCLUDEROOTDIR = includes
+INCLUDESUBDIR = $(shell find $(INCLUDEROOTDIR) -mindepth 1 -type d)
 DEBUFNAME = debug
 
+#pollテスト用
+MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") mac_main.cpp
+MACSRC := $(filter-out $(SRCDIR)/epoll/EpollWrapper.cpp, $(MACSRC))
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
 	@$(CXX) $(CXXFLAGS) $(OBJ) $(INCLUDE) -o $(NAME)
 	@echo "Compilation done: $(NAME)"
+
+# pollテスト用
+poll: $(MACSRC)
+	@$(CXX) $(CXXFLAGS) $(MACSRC) -o $(NAME)
+	@echo "Compilation done: $(NAME)"
+
+poll_debug: $(MACSRC)
+	@$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(MACSRC) -o $(DEBUFNAME)
+	@echo "Compilation done: $(DEBUFNAME)"
+# pollテスト用 end
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(dir $@)
@@ -37,6 +50,7 @@ debug: $(OBJ)
 	@$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(OBJ) $(INCLUDE) -o $(DEBUFNAME)
 	@echo "Compilation done: $(DEBUFNAME)"
 
+#clean と　fcleanは統合できるのでは？
 debugclean:
 	@rm -rf $(DEBUFNAME)
 	@echo "Debug executable deleted."

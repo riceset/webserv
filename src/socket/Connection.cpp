@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 15:00:38 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/01/30 13:35:05 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,7 @@ void Connection::readSocket()
 		return;
 	}
 	buff[rlen] = '\0';
+	std::cout << "buff: " << buff << std::endl; // デバッグ用
 	rbuff_ += buff;
 	request_ = new HttpRequest(rbuff_);
 }
