@@ -39,9 +39,12 @@ int main()
 	// std::string path = "/cgi/";
 	conf_value_t conf_value;
 
-	try {
+	try
+	{
 		conf_value = mainConf.get_conf_value(port, server_name, path);
-	} catch (std::exception &e) {
+	}
+	catch(std::exception &e)
+	{
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
