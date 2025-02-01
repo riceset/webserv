@@ -35,8 +35,16 @@ int main()
 	// search server && location block
 	std::string port = "8080";
 	std::string server_name = "localhost";
-	std::string path = "/";
-	conf_value_t conf_value = mainConf.get_conf_value(port, server_name, path);
+	std::string path = "/under_construction/";
+	// std::string path = "/cgi/";
+	conf_value_t conf_value;
+
+	try {
+		conf_value = mainConf.get_conf_value(port, server_name, path);
+	} catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
 
 	// debug
 	mainConf.debug_print_conf_value(conf_value);
