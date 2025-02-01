@@ -5,3 +5,5 @@ up:
 down:
 	@echo "Stopping Nginx..."
 	@docker compose down
+
+rebuild: down up
