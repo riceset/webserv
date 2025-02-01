@@ -256,11 +256,7 @@ void LocConf::get_conf_value(std::string path, conf_value_t &conf_value)
 	{
 		if(_locations[i].get_path() == path)
 		{
-			// trim path
-			// ex) path = /hoge/fuga && path_ = /hoge => /fuga
-			std::string trimed_path =
-				path.substr(_locations[i].get_path().size());
-			_locations[i].get_conf_value(trimed_path, conf_value);
+			_locations[i].get_conf_value(path, conf_value);
 		}
 	}
 
