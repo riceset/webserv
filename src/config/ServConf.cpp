@@ -1,5 +1,6 @@
 #include "ServConf.hpp"
 
+// Constructor
 ServConf::ServConf(std::string content)
 {
 	// init
@@ -20,9 +21,10 @@ ServConf::ServConf(std::string content)
 	param(content);
 }
 
+// Destructor
 ServConf::~ServConf() {}
 
-// param
+// Setter
 void ServConf::param(std::string content)
 {
 	size_t pos = 0;
@@ -60,7 +62,6 @@ void ServConf::param(std::string content)
 	}
 }
 
-// set
 void ServConf::set_listen(std::vector<std::string> tokens)
 {
 	if(tokens.size() != 2)
@@ -145,6 +146,64 @@ void ServConf::handle_location_block(std::vector<std::string> tokens)
 
 	// location block, path
 	_locations.push_back(LocConf(tokens[2], tokens[1]));
+}
+
+// Getter
+std::string ServConf::get_listen()
+{
+	return _listen;
+}
+
+std::string ServConf::get_server_name()
+{
+	return _server_name;
+}
+
+// get conf_value_t
+LocConf select_location(std::string path, std::vector<LocConf> locations)
+{
+	size_t max_len = 0;
+	LocConf locConf;
+
+	for(size_t i = 0; i < locations.size(); i++)
+	{
+		// pathの前方一致の中で長いものを優先
+		// /hoge/fuga と /hoge がある場合、/hoge/fuga が優先される
+		if(max_len < path.size() &&
+		   !std::strncmp(
+			   path.c_str(), locations[i].get_path().c_str(), path.size()))
+		{
+			max_len = path.size();
+			locConf = locations[i];
+		}
+	}
+
+	if(locConf.get_path().empty())
+	{
+		throw std::runtime_error("[server] location not found");
+	}
+
+	return locConf;
+}
+
+conf_value_t ServConf::get_conf_value(std::string path)
+{
+	conf_value_t conf_value;
+	LocConf locConf;
+
+	conf_value._listen = _listen;
+	conf_value._server_name = _server_name;
+	conf_value._error_page = _error_page;
+	conf_value._client_max_body_size = _client_max_body_size;
+
+	try {
+		locConf = select_location(path, _locations);
+	} catch (std::runtime_error &e) {
+		throw std::runtime_error("[server] location not found");
+	}
+
+	locConf.get_conf_value(path, conf_value);
+	return conf_value;
 }
 
 // debug

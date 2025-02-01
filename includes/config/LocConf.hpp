@@ -21,6 +21,7 @@ private:
 	std::map<std::string, handler_directive_t> _handler_directive;
 
 public:
+	LocConf();
 	LocConf(std::string content, std::string path);
 	~LocConf();
 
@@ -34,6 +35,12 @@ public:
 	void set_root(std::vector<std::string> tokens);
 	void set_client_max_body_size(std::vector<std::string> tokens);
 	void handle_location_block(std::vector<std::string> tokens);
+
+	// getter
+	std::string get_path();
+
+	// get conf_value_t
+	void get_conf_value(std::string path, conf_value_t &conf_value);
 
 	// debug
 	void debug_print();

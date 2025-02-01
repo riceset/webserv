@@ -39,3 +39,16 @@ private:
 		token.clear();
 	}
 };
+
+struct conf_value_t {
+	std::string _listen;
+	std::string _server_name;
+	std::vector<std::string> _error_page;
+	std::string _path;
+	std::vector<std::string> _limit_except;
+	std::vector<std::string> _return;
+	bool _autoindex;
+	std::vector<std::string> _index;
+	std::string _root;
+	std::string _client_max_body_size;
+};
