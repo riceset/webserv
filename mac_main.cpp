@@ -4,29 +4,14 @@
 #include "ConnectionWrapper.hpp"
 #include "Listener.hpp"
 
-std::vector<Listener> createServerSockets() {
-	// ? memo : socket wrapper needed??
-	std::vector<Listener> listeners;
-	Listener listener = Listener(8080);
-
-	listeners.push_back(listener);
-	
-	return listeners;
-}
-
-std::vector<struct pollfd> createPollFds(std::vector<Listener> listeners) {
-	std::vector<struct pollfd> pollfds;
+void addPollFD(std::vector<struct pollfd> &pollfds, int fd, int events) {
 	struct pollfd pollfd;
-
-	for (size_t i = 0; i < listeners.size(); i++) {
-		pollfd.fd = listeners[i].getFd();
-		pollfd.events = POLLIN;
-		pollfds.push_back(pollfd);
-	}
-	return pollfds;
+	pollfd.fd = fd;
+	pollfd.events = events;
+	pollfds.push_back(pollfd);
 }
 
-std::vector<struct pollfd> removePollFd(std::vector<struct pollfd> pollfds, int fd) {
+void removePollFd(std::vector<struct pollfd> &pollfds, int fd) {
 	std::vector<struct pollfd> newPollfds;
 
 	for (std::vector<struct pollfd>::iterator i = pollfds.begin(); i != pollfds.end(); ++i) {
@@ -36,16 +21,39 @@ std::vector<struct pollfd> removePollFd(std::vector<struct pollfd> pollfds, int 
 		newPollfds.push_back(*i);
 	}
 
-	return newPollfds;
+	pollfds.clear();
+	pollfds = newPollfds;
+}
+
+bool is_listener(std::vector<Listener> &listeners, int fd) {
+	for (std::vector<Listener>::iterator i = listeners.begin(); i != listeners.end(); ++i) {
+		if (i->getFd() == fd) {
+			return true;
+		}
+	}
+	return false;
 }
 
 int main() {
-	std::vector<Listener> listeners = createServerSockets();
-	std::vector<struct pollfd> pollfds = createPollFds(listeners);
+	// 管理すべき構造体
+	std::vector<struct pollfd> pollfds;
 	ConnectionWrapper connections;
-	Connection *newConn = NULL;
+	std::vector<Listener> listeners;
+
+	// 初期化
+	Listener listener(80);
+	addPollFD(pollfds, listener.getFd(), POLLIN);
+	listeners.push_back(listener);
 
 	for (;;) {
+		
+		std::cout << "========== Polling : " << pollfds.size() << std::endl;
+		std::cout << "Pollfds: ";
+		for (std::vector<struct pollfd>::iterator i = pollfds.begin(); i != pollfds.end(); ++i) {
+			std::cout << " " << i->fd;
+		}
+		std::cout << std::endl;
+
 		int ret = poll(pollfds.data(), pollfds.size(), -1);
 		if (ret < 0) {
 			std::cerr << "Poll failed: " << strerror(errno) << std::endl;
@@ -53,49 +61,49 @@ int main() {
 		}
 
 		for (std::vector<struct pollfd>::iterator i = pollfds.begin(); i != pollfds.end(); ++i) {
-			if (i->revents & POLLIN) {
-				std::cout << "Event on fd = " << i->fd << std::endl;
-				std::vector<Listener>::iterator j = listeners.begin();
-				// if the event is on a listener socket, accept the connection
-				while (j != listeners.end()) {
-					if (i->fd == j->getFd()) {
-						newConn = new Connection(j->getFd());
-						connections.addConnection(newConn);
-						break;
-					}
-					j++;
+			std::cout << "fd: " << i->fd << std::endl; //debug
+
+			if (i->revents & POLLIN) { // 読み込み可能
+
+				std::cout << "POLLIN" << std::endl; //debug
+
+				if (is_listener(listeners, i->fd)) // passive socket (リッスンしているソケット)
+				{
+
+					std::cout << "is_listener" << std::endl; //debug
+
+					Connection *newConn = new Connection(i->fd);
+					connections.addConnection(newConn);
+					addPollFD(pollfds, newConn->getFd() , POLLIN);
+
+					break;
 				}
-				// if the event is on a connection socket, read from it
-				if (j == listeners.end()) {
-					// ? memo : when connection wrapper cannot find the connection
-					Connection *conn = connections.getConnection(i->fd);
+				else // pair socket (ペアソケット)
+				{
+
+					std::cout << "is_pair_socket" << std::endl; //debug
+
 					try {
-						conn -> readSocket();
+						connections.getConnection(i->fd) -> readSocket(); // ペアソケットの取得と読み込み
 						i->events = POLLOUT;
 					} catch (std::exception &e) {
 						std::cerr << "Read failed: " << e.what() << std::endl;
 					}
+					break;
 				}
-				break;
-			} else if (i->revents & POLLOUT) {
-				std::cout << "Writing to connection fd = " << i->fd << std::endl;
-				Connection *conn = connections.getConnection(i->fd);
+			} else if (i->revents & POLLOUT) { // 書き込み可能
+
+				std::cout << "POLLOUT" << std::endl; //debug
+
 				try {
-					conn -> writeSocket();
-					pollfds = removePollFd(pollfds, i->fd);
+					connections.getConnection(i->fd) -> writeSocket(); // ペアソケットの取得と書き込み
+					removePollFd(pollfds, i->fd);
 				} catch (std::exception &e) {
 					std::cerr << "Write failed: " << e.what() << std::endl;
+					exit(EXIT_FAILURE);
 				}
 				break;
 			}
-		}
-
-		if (newConn != NULL) {
-			struct pollfd new_pollfd;
-			new_pollfd.fd = newConn->getFd();
-			new_pollfd.events = POLLIN;
-			pollfds.push_back(new_pollfd);
-			newConn = NULL;
 		}
 	}
 }
