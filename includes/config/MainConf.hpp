@@ -18,12 +18,19 @@ public:
 	MainConf(std::string content);
 	~MainConf();
 
-	// 値の設定
+	// setter
 	virtual void param(std::string conf_content);
+
+	// getter
+	// port number, server_name, path (3 arguments) finds the corresponding conf_value_t
+	conf_value_t get_conf_value(std::string port, std::string server_name, std::string path); //throw
+	// listen portを取得 passive socket 作成に利用
+	std::vector<int> get_listen(); //throw
 
 	// handler
 	void handle_server_block(std::vector<std::string> tokens);
 
 	// debug
 	void debug_print();
+	void debug_print_conf_value(conf_value_t conf_value);
 };

@@ -1,5 +1,8 @@
 #include "LocConf.hpp"
 
+// Constructor
+LocConf::LocConf() : _path("") {}
+
 LocConf::LocConf(std::string content, std::string path) : _path(path)
 {
 	// init
@@ -24,8 +27,10 @@ LocConf::LocConf(std::string content, std::string path) : _path(path)
 	param(content);
 }
 
+// Destructor
 LocConf::~LocConf() {}
 
+// Setter
 void LocConf::param(std::string content)
 {
 	size_t pos = 0;
@@ -59,6 +64,10 @@ void LocConf::param(std::string content)
 		if(_handler_directive.find(tokens[0]) != _handler_directive.end())
 		{
 			(this->*_handler_directive[tokens[0]])(tokens);
+		}
+		else
+		{
+			throw std::runtime_error("unknown directive");
 		}
 	}
 }
@@ -199,10 +208,70 @@ void LocConf::set_client_max_body_size(std::vector<std::string> tokens)
 	_client_max_body_size = tokens[1];
 }
 
+// Getter
+std::string LocConf::get_path()
+{
+	return _path;
+}
+
+// Get conf_value_t
+LocConf get_location(std::string path, std::vector<LocConf> locations)
+{
+	LocConf locConf;
+
+	for(size_t i = 0; i < locations.size(); i++)
+	{
+		if(path.find(locations[i].get_path()) == 0)
+		{
+			locConf = locations[i];
+		}
+	}
+
+	return locConf;
+}
+
+void LocConf::get_conf_value(std::string path, conf_value_t &conf_value)
+{
+	if(_limit_except.size() > 0)
+		conf_value._limit_except = _limit_except;
+	if(_return.size() > 0)
+		conf_value._return = _return;
+	if(_autoindex)
+		conf_value._autoindex = _autoindex;
+	if(_index.size() > 0)
+		conf_value._index = _index;
+	if(_root.size() > 0)
+		conf_value._root = _root;
+	if(_client_max_body_size.size() > 0)
+		conf_value._client_max_body_size = _client_max_body_size;
+
+	// pathの前方一致の中で長いものを優先
+	// /hoge/fuga と /hoge がある場合、/hoge/fuga が優先される
+	LocConf locConf = get_location(path, _locations);
+	if(locConf.get_path().empty())
+	{
+		return;
+	}
+	for(size_t i = 0; i < _locations.size(); i++)
+	{
+		if(_locations[i].get_path() == path)
+		{
+			// trim path
+			// ex) path = /hoge/fuga && path_ = /hoge => /fuga
+			std::string trimed_path =
+				path.substr(_locations[i].get_path().size());
+			_locations[i].get_conf_value(trimed_path, conf_value);
+		}
+	}
+
+	return;
+}
+
 // debug
 void LocConf::debug_print()
 {
 	std::cout << std::endl;
+	std::cout << "=========================== location block:" << std::endl;
 	std::cout << "path: " << _path << std::endl;
 	std::cout << "limit_except: ";
 	std::cout << "return: ";
@@ -226,5 +295,6 @@ void LocConf::debug_print()
 		std::cout << "location " << i << ":" << std::endl;
 		_locations[i].debug_print();
 	}
+	std::cout << "=================================" << std::endl;
 	std::cout << std::endl << std::endl;
 }

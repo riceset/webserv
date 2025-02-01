@@ -34,6 +34,13 @@ public:
 	void set_client_max_body_size(std::vector<std::string> tokens);
 	void handle_location_block(std::vector<std::string> tokens);
 
+	// gettter
+	std::string get_listen();
+	std::string get_server_name();
+
+	// get conf_value_t
+	conf_value_t get_conf_value(std::string path);
+
 	// debug
 	void debug_print();
 };
