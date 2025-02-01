@@ -196,9 +196,12 @@ conf_value_t ServConf::get_conf_value(std::string path)
 	conf_value._error_page = _error_page;
 	conf_value._client_max_body_size = _client_max_body_size;
 
-	try {
+	try
+	{
 		locConf = select_location(path, _locations);
-	} catch (std::runtime_error &e) {
+	}
+	catch(std::runtime_error &e)
+	{
 		throw std::runtime_error("[server] location not found");
 	}
 

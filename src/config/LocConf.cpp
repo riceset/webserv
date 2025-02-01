@@ -232,25 +232,25 @@ LocConf get_location(std::string path, std::vector<LocConf> locations)
 
 void LocConf::get_conf_value(std::string path, conf_value_t &conf_value)
 {
-	if (_limit_except.size() > 0)
+	if(_limit_except.size() > 0)
 		conf_value._limit_except = _limit_except;
-	if (_return.size() > 0)
+	if(_return.size() > 0)
 		conf_value._return = _return;
-	if (_autoindex)
+	if(_autoindex)
 		conf_value._autoindex = _autoindex;
-	if (_index.size() > 0)
+	if(_index.size() > 0)
 		conf_value._index = _index;
-	if (_root.size() > 0)
+	if(_root.size() > 0)
 		conf_value._root = _root;
-	if (_client_max_body_size.size() > 0)
+	if(_client_max_body_size.size() > 0)
 		conf_value._client_max_body_size = _client_max_body_size;
 
 	// pathの前方一致の中で長いものを優先
 	// /hoge/fuga と /hoge がある場合、/hoge/fuga が優先される
 	LocConf locConf = get_location(path, _locations);
-	if (locConf.get_path().empty())
+	if(locConf.get_path().empty())
 	{
-		return ;
+		return;
 	}
 	for(size_t i = 0; i < _locations.size(); i++)
 	{
@@ -264,7 +264,7 @@ void LocConf::get_conf_value(std::string path, conf_value_t &conf_value)
 		}
 	}
 
-	return ;
+	return;
 }
 
 // debug

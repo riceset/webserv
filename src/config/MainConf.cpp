@@ -110,7 +110,8 @@ void MainConf::debug_print()
 {
 	for(size_t i = 0; i < _servers.size(); i++)
 	{
-		std::cout << "=========================== server " << i << ":" << std::endl;
+		std::cout << "=========================== server " << i << ":"
+				  << std::endl;
 		_servers[i].debug_print();
 	}
 }
