@@ -46,13 +46,6 @@ int main() {
 	listeners.push_back(listener);
 
 	for (;;) {
-		
-		std::cout << "========== Polling : " << pollfds.size() << std::endl;
-		std::cout << "Pollfds: ";
-		for (std::vector<struct pollfd>::iterator i = pollfds.begin(); i != pollfds.end(); ++i) {
-			std::cout << " " << i->fd;
-		}
-		std::cout << std::endl;
 
 		int ret = poll(pollfds.data(), pollfds.size(), -1);
 		if (ret < 0) {
@@ -61,17 +54,9 @@ int main() {
 		}
 
 		for (std::vector<struct pollfd>::iterator i = pollfds.begin(); i != pollfds.end(); ++i) {
-			std::cout << "fd: " << i->fd << std::endl; //debug
-
 			if (i->revents & POLLIN) { // 読み込み可能
-
-				std::cout << "POLLIN" << std::endl; //debug
-
 				if (is_listener(listeners, i->fd)) // passive socket (リッスンしているソケット)
 				{
-
-					std::cout << "is_listener" << std::endl; //debug
-
 					Connection *newConn = new Connection(i->fd);
 					connections.addConnection(newConn);
 					addPollFD(pollfds, newConn->getFd() , POLLIN);
@@ -80,21 +65,15 @@ int main() {
 				}
 				else // pair socket (ペアソケット)
 				{
-
-					std::cout << "is_pair_socket" << std::endl; //debug
-
 					try {
 						connections.getConnection(i->fd) -> readSocket(); // ペアソケットの取得と読み込み
-						i->events = POLLOUT;
+						i->events = POLLOUT; // set event
 					} catch (std::exception &e) {
 						std::cerr << "Read failed: " << e.what() << std::endl;
 					}
 					break;
 				}
 			} else if (i->revents & POLLOUT) { // 書き込み可能
-
-				std::cout << "POLLOUT" << std::endl; //debug
-
 				try {
 					connections.getConnection(i->fd) -> writeSocket(); // ペアソケットの取得と書き込み
 					removePollFd(pollfds, i->fd);

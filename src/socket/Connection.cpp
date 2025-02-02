@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/30 13:35:05 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/02 18:32:53 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,13 +74,14 @@ void Connection::readSocket()
 		{
 			return;
 		}
-		throw std::runtime_error("recv failed");
+		throw std::runtime_error("[Connection] Recive failed");
 	}
 	else if(rlen == 0)
 	{
 		if(isTimedOut())
-			throw std::runtime_error("Timed out, Connection closed by client");
-		return;
+			throw std::runtime_error("[Connection] Timed out, Connection closed by client");
+		else
+			throw std::runtime_error("[Connection] Connection closed by client");
 	}
 	buff[rlen] = '\0';
 	std::cout << "buff: " << buff << std::endl; // デバッグ用
@@ -93,7 +94,7 @@ void Connection::writeSocket()
 {
 	if(!request_)
 	{
-		throw std::runtime_error("No request found");
+		throw std::runtime_error("[Connection] No request found");
 	}
 	try
 	{
@@ -101,7 +102,7 @@ void Connection::writeSocket()
 		buildResponseString();
 		ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
 		if(wlen == -1)
-			throw std::runtime_error("send failed");
+			throw std::runtime_error("[connection] Send failed");
 		/* remove Http request instance from connection */
 		if(request_)
 			delete request_;

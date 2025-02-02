@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 14:54:48 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/02 18:35:12 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,7 @@ std::string HttpResponse::setResponseBody(
 	std::string body;
 	std::ifstream ifs(filepath.c_str());
 	if(ifs.fail())
-		throw std::runtime_error("Failed to open file");
+		throw std::runtime_error("[HttpResponse] Failed to open file");
 	std::string line;
 	while(std::getline(ifs, line))
 		body += line;

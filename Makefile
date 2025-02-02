@@ -33,7 +33,7 @@ fclean: clean
 re: fclean all
 
 # ================== poll test ==================
-MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") mac_main.cpp
+MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") common_main.cpp
 MACSRC := $(filter-out $(SRCDIR)/epoll/EpollWrapper.cpp, $(MACSRC))
 
 poll: $(MACSRC)
