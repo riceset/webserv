@@ -24,7 +24,7 @@ public:
 	// void modifyEvent(int fd, uint32_t events); // struct epoll_event or struct pollfd
 
 	// getter
-	virtual int getEventNumber() const = 0;
+	virtual int getEventSize() const = 0;
 
 	// methods
 	virtual void wait() = 0;

@@ -1,4 +1,4 @@
-#include "PollWrapper.hpp"
+#include "NewEPollWrapper.hpp"
 
 int main() {
 	std::vector<int> ports; // ports = config.get_listener();
@@ -10,13 +10,13 @@ int main() {
 		Listener listener(*i);
 		listeners.push_back(listener);
 	}
-	PollWrapper pw(listeners);
+	EPollWrapper pw(listeners);
 
 	for (;;) {
 		std::cout << std::endl << "Waiting for event" << std::endl;
 		pw.wait();
 
-		int event_num = pw.getEventNumber();
+		int event_num = pw.getEventSize();
 		for (int i = 0; i < event_num; i++) {
 			if (pw.is_listener(i))
 			{

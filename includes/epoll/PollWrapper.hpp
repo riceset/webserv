@@ -23,7 +23,7 @@ public:
 	void removeEvent(int fd);
 
 	// getter
-	int getEventNumber() const;
+	int getEventSize() const;
 
 	// methods
 	void wait();

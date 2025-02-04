@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CXXFLAGS += $(addprefix -I, $(INCLUDESUBDIR))
 DEBUGFLAGS = -g -fsanitize=address
 NAME = webserv
-SRC = $(shell find $(SRCDIR) -type f -name "*.cpp") main.cpp
+SRC = $(shell find $(SRCDIR) -type f -name "*.cpp") epoll_main.cpp
 OBJ = $(SRC:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 SRCDIR = src
 OBJDIR = objs
@@ -33,7 +33,7 @@ fclean: clean
 re: fclean all
 
 # ================== poll test ==================
-MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") common_main.cpp
+MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") poll_main.cpp
 MACSRC := $(filter-out $(SRCDIR)/epoll/EpollWrapper.cpp, $(MACSRC))
 
 poll: $(MACSRC)

@@ -58,7 +58,7 @@ void PollWrapper::removeEvent(int fd)
 }
 
 // getter
-int PollWrapper::getEventNumber() const
+int PollWrapper::getEventSize() const
 {
 	return _events.size();
 }
