@@ -1,9 +1,10 @@
 #pragma once
 
 #include <vector>
-#include "Listener.hpp"
+
 #include "Connection.hpp"
 #include "ConnectionWrapper.hpp"
+#include "Listener.hpp"
 
 class ApollWrapper
 {
@@ -20,17 +21,18 @@ public:
 	// setter
 	virtual void addListener(int port) = 0;
 
-	// void addEvent(int fd, uint32_t events); // struct epoll_event or struct pollfd
-	// void modifyEvent(int fd, uint32_t events); // struct epoll_event or struct pollfd
+	// void addEvent(int fd, uint32_t events); // struct epoll_event or struct
+	// pollfd void modifyEvent(int fd, uint32_t events); // struct epoll_event
+	// or struct pollfd
 
 	// getter
 	virtual int getEventSize() const = 0;
 
 	// methods
 	virtual void wait() = 0;
-	virtual bool is_listener(int index) = 0;
-	virtual bool is_pollin_event(int index) = 0;
-	virtual bool is_pollout_event(int index) = 0;
+	virtual bool isListener(int index) = 0;
+	virtual bool isPollinEvent(int index) = 0;
+	virtual bool isPolloutEvent(int index) = 0;
 
 	virtual void accept(int index) = 0;
 	virtual void read(int index) = 0;

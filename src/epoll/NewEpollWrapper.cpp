@@ -124,7 +124,7 @@ void EpollWrapper::wait()
 	return;
 }
 
-bool EpollWrapper::is_listener(int index)
+bool EpollWrapper::isListener(int index)
 {
 	if(!(_detected_events[index].events & EPOLLIN))
 		return false;
@@ -139,26 +139,31 @@ bool EpollWrapper::is_listener(int index)
 	return false;
 }
 
-bool EpollWrapper::is_pollin_event(int index)
+bool EpollWrapper::isPollinEvent(int index)
 {
 	if(!(_detected_events[index].events & EPOLLIN))
 		return false;
 	return true;
 }
 
-bool EpollWrapper::is_pollout_event(int index)
+bool EpollWrapper::isPolloutEvent(int index)
 {
 	if(!(_detected_events[index].events & EPOLLOUT))
 		return false;
 	return true;
 }
 
-bool EpollWrapper::is_timeout(int index)
+bool EpollWrapper::isTimeOut(int index)
 {
-	Connection *conn =
-		_connections.getConnection(_detected_events[index].data.fd);
-	if(conn->isTimeout())
-		return true;
+	try {
+		Connection *conn = _connections.getConnection(_detected_events[index].data.fd);
+		if(conn->isTimeout())
+			return true;
+	}
+	catch(std::exception &e)
+	{
+		return false;
+	}
 	return false;
 }
 
@@ -214,12 +219,11 @@ void EpollWrapper::write(int index)
 	modifyEvent(conn->getFd(), EPOLLIN);
 }
 
-void EpollWrapper::close(int index)
+void EpollWrapper::closeSocket(int index)
 {
 	Connection *conn =
 		_connections.getConnection(_detected_events[index].data.fd);
 	removeEvent(conn->getFd());
 	_connections.removeConnection(conn->getFd());
 	shutdown(conn->getFd(), SHUT_RDWR);
-	close(conn->getFd());
 }

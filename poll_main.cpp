@@ -1,5 +1,5 @@
-// #include "PollWrapper.hpp"
-#include "NewEpollWrapper.hpp"
+#include "PollWrapper.hpp"
+// #include "NewEpollWrapper.hpp"
 
 std::vector<Listener> make_Listener(std::vector<int> ports)
 {
@@ -28,8 +28,8 @@ int main()
 	ports.push_back(8080);
 	std::vector<Listener> listeners = make_Listener(ports);
 
-	// PollWrapper pw(listeners);
-	EpollWrapper pw(10, listeners);
+	PollWrapper pw(listeners);
+	// EpollWrapper pw(10, listeners);
 
 	for(;;)
 	{
@@ -48,7 +48,8 @@ int main()
 		int event_num = pw.getEventSize();
 		for(int i = 0; i < event_num; i++)
 		{
-			if(pw.is_listener(i))
+			std::cout << "Event number: " << i << std::endl;
+			if(pw.isListener(i))
 			{
 				std::cout << "Accepting connection" << std::endl;
 				try
@@ -60,8 +61,9 @@ int main()
 					std::cerr << e.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
+				break;
 			}
-			else if(pw.is_pollin_event(i))
+			else if(pw.isPollinEvent(i))
 			{
 				std::cout << "Reading from connection" << std::endl;
 				try
@@ -73,8 +75,9 @@ int main()
 					std::cerr << e.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
+				break;
 			}
-			else if(pw.is_pollout_event(i))
+			else if(pw.isPolloutEvent(i))
 			{
 				std::cout << "Writing to connection" << std::endl;
 				try
@@ -86,19 +89,21 @@ int main()
 					std::cerr << e.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
+				break;
 			}
-			else if(pw.is_timeout(i))
+			else if(pw.isTimeOut(i))
 			{
 				std::cout << "Connection timed out" << std::endl;
 				try
 				{
-					pw.close(i);
+					pw.closeSocket(i);
 				}
 				catch(std::exception &e)
 				{
 					std::cerr << e.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
+				break;
 			}
 		}
 	}

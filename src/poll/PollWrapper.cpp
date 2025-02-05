@@ -82,10 +82,12 @@ void PollWrapper::wait()
 	}
 }
 
-bool PollWrapper::is_listener(int index)
+bool PollWrapper::isListener(int index)
 {
 	if(!(_events[index].revents & POLLIN))
+	{
 		return false;
+	}
 
 	for(std::vector<Listener>::const_iterator i = _listeners.begin();
 		i != _listeners.end();
@@ -97,25 +99,31 @@ bool PollWrapper::is_listener(int index)
 	return false;
 }
 
-bool PollWrapper::is_pollin_event(int index)
+bool PollWrapper::isPollinEvent(int index)
 {
 	if(_events[index].revents & POLLIN)
 		return true;
 	return false;
 }
 
-bool PollWrapper::is_pollout_event(int index)
+bool PollWrapper::isPolloutEvent(int index)
 {
 	if(_events[index].revents & POLLOUT)
 		return true;
 	return false;
 }
 
-bool PollWrapper::is_timeout(int index)
+bool PollWrapper::isTimeOut(int index)
 {
-	Connection *conn = _connections.getConnection(_events[index].fd);
-	if(conn->isTimedOut())
-		return true;
+	try {
+		Connection *conn = _connections.getConnection(_events[index].fd);
+		if(conn->isTimedOut())
+			return true;
+	}
+	catch(std::exception &e)
+	{
+		return false;
+	}
 	return false;
 }
 
@@ -168,11 +176,10 @@ void PollWrapper::write(int index)
 	modifyEvent(conn->getFd(), POLLIN);
 }
 
-void PollWrapper::close(int index)
+void PollWrapper::closeSocket(int index)
 {
 	Connection *conn = _connections.getConnection(_events[index].fd);
 	removeEvent(conn->getFd());
 	_connections.removeConnection(conn->getFd());
 	shutdown(conn->getFd(), SHUT_RDWR);
-	close(conn->getFd());
 }

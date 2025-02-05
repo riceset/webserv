@@ -1,8 +1,11 @@
 #pragma once
 
-#include "ApollWrapper.hpp"
 #include <poll.h>
+
+#include <fstream>
 #include <vector>
+
+#include "ApollWrapper.hpp"
 
 class PollWrapper : public ApollWrapper
 {
@@ -27,13 +30,13 @@ public:
 
 	// methods
 	void wait();
-	bool is_listener(int index);
-	bool is_pollin_event(int index);
-	bool is_pollout_event(int index);
-	bool is_timeout(int index);
+	bool isListener(int index);
+	bool isPollinEvent(int index);
+	bool isPolloutEvent(int index);
+	bool isTimeOut(int index);
 
 	void accept(int index);
 	void read(int index);
 	void write(int index);
-	void close(int index);
+	void closeSocket(int index);
 };
