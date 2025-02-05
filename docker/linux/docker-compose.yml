@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"  # ホスト:コンテナ
+      - "80:80"
     volumes:
       - ../../:/usr/src/app  # プロジェクト全体をコンテナにマウント
     tty: true
