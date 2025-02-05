@@ -1,41 +1,48 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   EpollWrapper.hpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/12/13 14:08:59 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/30 08:03:15 by atsu             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#ifndef EPOLLWRAPPER_HPP
-#define EPOLLWRAPPER_HPP
+#pragma once
 
 #include <sys/epoll.h>
+#include <unistd.h>
 
 #include <stdexcept>
 #include <vector>
 
-class EpollWrapper
+#include "ApollWrapper.hpp"
+
+class EpollWrapper : public ApollWrapper
 {
 private:
 	int epfd_;
-	size_t max_events_;
-	std::vector<struct epoll_event> events_list_;
+	std::vector<struct epoll_event> _events;
+	std::vector<struct epoll_event> _detected_events;
+	int _detected_event_size;
 	EpollWrapper();
 
 public:
-	EpollWrapper(int max_events);
+	// constructor
+	EpollWrapper(int max_events, std::vector<Listener> listeners);
 	~EpollWrapper();
-	int getEpfd() const;
-	std::vector<struct epoll_event> getEventsList() const;
-	void addEvent(int fd);
-	void deleteEvent(int fd);
-	int epwait();
-	struct epoll_event &operator[](size_t index);
-	void setEvent(int fd, uint32_t events);
-};
 
-#endif
+	// setter
+	void addListener(int port);
+
+	void addEvent(int fd, uint32_t events);
+	void modifyEvent(int fd, uint32_t events);
+	void removeEvent(int fd);
+
+	// getter
+	int getEpfd() const;
+	int getEventSize() const;
+
+	// methods
+	void wait();
+
+	bool isListener(int index);
+	bool isPollinEvent(int index);
+	bool isPolloutEvent(int index);
+	bool isTimeOut(int index);
+
+	void accept(int index);
+	void read(int index);
+	void write(int index);
+	void closeSocket(int index);
+};

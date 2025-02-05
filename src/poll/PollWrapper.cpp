@@ -115,7 +115,8 @@ bool PollWrapper::isPolloutEvent(int index)
 
 bool PollWrapper::isTimeOut(int index)
 {
-	try {
+	try
+	{
 		Connection *conn = _connections.getConnection(_events[index].fd);
 		if(conn->isTimedOut())
 			return true;
