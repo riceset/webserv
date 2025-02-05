@@ -91,29 +91,9 @@ int EpollWrapper::getEventSize() const
 
 void EpollWrapper::wait()
 {
-	for (std::vector<struct epoll_event>::iterator i = _events.begin(); i != _events.end(); ++i)
-	{
-		std::cout << "[before] events: " << i->events << " fd: " << i->data.fd << std::endl;
-	}
-	for (std::vector<struct epoll_event>::iterator i = _detected_events.begin(); i != _detected_events.end(); ++i)
-	{
-		std::cout << "[before] detected events: " << i->events << " fd: " << i->data.fd << std::endl;
-	}
-	std::cout << std::endl;
-
 	_detected_events.clear();
 	_detected_events = _events;
 	_detected_event_size = 0;
-
-	for (std::vector<struct epoll_event>::iterator i = _events.begin(); i != _events.end(); ++i)
-	{
-		std::cout << "[after] events: " << i->events << " fd: " << i->data.fd << std::endl;
-	}
-	for (std::vector<struct epoll_event>::iterator i = _detected_events.begin(); i != _detected_events.end(); ++i)
-	{
-		std::cout << "[after] detected events: " << i->events << " fd: " << i->data.fd << std::endl;
-	}
-	std::cout << std::endl;
 
 	for (;;) {
 		_detected_event_size = epoll_wait(epfd_, _detected_events.data(), _detected_events.size(), 0);
@@ -159,6 +139,14 @@ bool EpollWrapper::is_pollout_event(int index)
 	return true;
 }
 
+bool EpollWrapper::is_timeout(int index)
+{
+	Connection *conn = _connections.getConnection(_detected_events[index].data.fd);
+	if (conn->isTimeout())
+		return true;
+	return false;
+}
+
 void EpollWrapper::accept(int index)
 {
 	Connection *newConn;
@@ -200,4 +188,13 @@ void EpollWrapper::write(int index)
 		throw std::runtime_error(e.what());
 	}
 	modifyEvent(conn->getFd(), EPOLLIN);
+}
+
+void EpollWrapper::close(int index)
+{
+	Connection *conn = _connections.getConnection(_detected_events[index].data.fd);
+	removeEvent(conn->getFd());
+	_connections.removeConnection(conn->getFd());
+	shutdown(conn->getFd(), SHUT_RDWR);
+	close(conn->getFd());
 }

@@ -41,8 +41,10 @@ public:
 	bool is_listener(int index);
 	bool is_pollin_event(int index);
 	bool is_pollout_event(int index);
+	bool is_timeout(int index);
 
 	void accept(int index);
 	void read(int index);
 	void write(int index);
+	void close(int index);
 };

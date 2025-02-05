@@ -28,9 +28,6 @@ void PollWrapper::addEvent(int fd, short event_flag)
 	new_event.fd = fd;
 	new_event.events = event_flag;
 
-	std::cout << "add event" << std::endl;
-	std::cout << "fd=" << new_event.fd << " event=" << new_event.events << std::endl;
-
 	_events.push_back(new_event);
 }
 
@@ -108,6 +105,14 @@ bool PollWrapper::is_pollout_event(int index)
 	return false;
 }
 
+bool PollWrapper::is_timeout(int index)
+{
+	Connection *conn = _connections.getConnection(_events[index].fd);
+	if (conn->isTimedOut())
+		return true;
+	return false;
+}
+
 void PollWrapper::accept(int index)
 {
 	Connection *newConn;
@@ -148,4 +153,13 @@ void PollWrapper::write(int index)
 		throw std::runtime_error(e.what());
 	}
 	modifyEvent(conn->getFd(), POLLIN);
+}
+
+void PollWrapper::close(int index)
+{
+	Connection *conn = _connections.getConnection(_events[index].fd);
+	removeEvent(conn->getFd());
+	_connections.removeConnection(conn->getFd());
+	shutdown(conn->getFd(), SHUT_RDWR);
+	close(conn->getFd());
 }
