@@ -27,6 +27,10 @@ void PollWrapper::addEvent(int fd, short event_flag)
 	struct pollfd new_event;
 	new_event.fd = fd;
 	new_event.events = event_flag;
+
+	std::cout << "add event" << std::endl;
+	std::cout << "fd=" << new_event.fd << " event=" << new_event.events << std::endl;
+
 	_events.push_back(new_event);
 }
 
@@ -72,8 +76,7 @@ void PollWrapper::wait()
 	ret = poll(_events.data(), _events.size(), -1);
 	if (ret < 0)
 	{
-		std::cerr << "Poll failed: " << strerror(errno) << std::endl;
-		throw std::runtime_error("Poll failed");
+		throw std::runtime_error("[PollWrapper] Poll failed");
 	}
 
 }
@@ -107,7 +110,12 @@ bool PollWrapper::is_pollout_event(int index)
 
 void PollWrapper::accept(int index)
 {
-	Connection *newConn = new Connection(_events[index].fd);
+	Connection *newConn;
+	try {
+		newConn = new Connection(_events[index].fd);
+	} catch (std::exception &e) {
+		throw std::runtime_error(e.what());
+	}
 	_connections.addConnection(newConn);
 	addEvent(newConn->getFd(), POLLIN);
 }

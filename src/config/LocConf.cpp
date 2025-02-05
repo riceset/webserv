@@ -104,8 +104,8 @@ void LocConf::set_limit_except(std::vector<std::string> tokens)
 	while(tokens.size() > i)
 	{
 		// 小文字化
-		std::transform(
-			tokens[i].begin(), tokens[i].end(), tokens[i].begin(), ::tolower);
+		// std::transform(
+		// 	tokens[i].begin(), tokens[i].end(), tokens[i].begin(), ::tolower);
 
 		// メソッド名のチェック
 		// if (tokens[i] != "get" && tokens[i] != "post" && tokens[i] !=

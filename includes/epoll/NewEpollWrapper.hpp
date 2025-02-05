@@ -15,17 +15,19 @@ class EpollWrapper : public ApollWrapper
 private:
 	int epfd_;
 	std::vector<struct epoll_event> _events;
+	std::vector<struct epoll_event> _detected_events;
+	int _detected_event_size;
 	EpollWrapper();
 
 public:
 	// constructor
-	EpollWrapper(int max_events);
+	EpollWrapper(int max_events, std::vector<Listener> listeners);
 	~EpollWrapper();
 
 	// setter
 	void addListener(int port);
 
-	void addEvent(int fd);
+	void addEvent(int fd, uint32_t events);
 	void modifyEvent(int fd, uint32_t events);
 	void removeEvent(int fd);
 
@@ -44,5 +46,3 @@ public:
 	void read(int index);
 	void write(int index);
 };
-
-#endif

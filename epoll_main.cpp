@@ -1,4 +1,4 @@
-#include "NewEPollWrapper.hpp"
+#include "NewEpollWrapper.hpp"
 
 int main() {
 	std::vector<int> ports; // ports = config.get_listener();
@@ -10,11 +10,17 @@ int main() {
 		Listener listener(*i);
 		listeners.push_back(listener);
 	}
-	EPollWrapper pw(listeners);
+	EpollWrapper pw(10, listeners);
 
 	for (;;) {
-		std::cout << std::endl << "Waiting for event" << std::endl;
-		pw.wait();
+		std::cout << std::endl << "-------- Waiting for event ------------" << std::endl;
+		try {
+			pw.wait();
+		}
+		catch (std::exception &e) {
+			std::cerr << e.what() << std::endl;
+			exit(EXIT_FAILURE);
+		}
 
 		int event_num = pw.getEventSize();
 		for (int i = 0; i < event_num; i++) {
@@ -28,7 +34,6 @@ int main() {
 					std::cerr << e.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
-				break;
 			}
 			else if (pw.is_pollin_event(i))
 			{
@@ -40,7 +45,6 @@ int main() {
 					std::cerr << e.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
-				break;
 			}
 			else if (pw.is_pollout_event(i))
 			{
@@ -52,7 +56,6 @@ int main() {
 					std::cerr << e.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
-				break;
 			}
 		}
 	}

@@ -33,9 +33,9 @@ Connection::Connection(int listenerFd) : ASocket()
 	socklen_t len = sizeof(addr_);
 	fd_ = accept(listenerFd, (struct sockaddr *)&addr_, &len);
 	if(fd_ == -1)
-		throw std::runtime_error("accept failed");
+		throw std::runtime_error("[Connection] Accept failed");
 	if(fcntl(fd_, F_SETFL, O_NONBLOCK))
-		throw std::runtime_error("Failed to set socket to non-blocking");
+		throw std::runtime_error("[Connection] Failed to set socket to non-blocking");
 	request_ = NULL;
 	response_ = NULL;
 	lastActive_ = std::time(NULL);
@@ -56,7 +56,6 @@ int Connection::getFd() const
 bool Connection::isTimedOut()
 {
 	std::time_t now = std::time(NULL);
-	std::cout << "now: " << now << std::endl;
 	if(now - lastActive_ > timeout_)
 		return true;
 	lastActive_ = now;
