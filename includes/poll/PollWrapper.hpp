@@ -1,41 +1,35 @@
 #pragma once
 
-#include <sys/epoll.h>
-#include <unistd.h>
+#include <poll.h>
 
-#include <stdexcept>
+#include <fstream>
 #include <vector>
 
 #include "ApollWrapper.hpp"
 
-class EpollWrapper : public ApollWrapper
+class PollWrapper : public ApollWrapper
 {
 private:
-	int epfd_;
-	std::vector<struct epoll_event> _events;
-	std::vector<struct epoll_event> _detected_events;
-	int _detected_event_size;
-	EpollWrapper();
+	std::vector<struct pollfd> _events;
 
 public:
 	// constructor
-	EpollWrapper(int max_events, std::vector<Listener> listeners);
-	~EpollWrapper();
+	PollWrapper();
+	PollWrapper(std::vector<Listener> listeners);
+	~PollWrapper();
 
 	// setter
 	void addListener(int port);
 
-	void addEvent(int fd, uint32_t events);
-	void modifyEvent(int fd, uint32_t events);
+	void addEvent(int fd, short event_flag);
+	void modifyEvent(int fd, short event_flag);
 	void removeEvent(int fd);
 
 	// getter
-	int getEpfd() const;
 	int getEventSize() const;
 
 	// methods
 	void wait();
-
 	bool isListener(int index);
 	bool isPollinEvent(int index);
 	bool isPolloutEvent(int index);

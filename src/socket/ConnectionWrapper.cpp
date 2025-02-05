@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConnectionWrapper.cpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 22:49:41 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 14:33:25 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/05 18:52:16 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ Connection *ConnectionWrapper::getConnection(int fd) const
 		if(connections_[i]->getFd() == fd)
 			return connections_[i];
 	}
-	return NULL;
+	throw std::runtime_error("[ConnectionWrapper] Connection not found");
 }
 
 /* Remove the connection with the given file descriptor */

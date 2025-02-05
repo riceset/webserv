@@ -1,5 +1,7 @@
 #include "ServConf.hpp"
 
+#include <cstring>
+
 // Constructor
 ServConf::ServConf(std::string content)
 {

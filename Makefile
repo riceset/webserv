@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CXXFLAGS += $(addprefix -I, $(INCLUDESUBDIR))
 DEBUGFLAGS = -g -fsanitize=address
 NAME = webserv
-SRC = $(shell find $(SRCDIR) -type f -name "*.cpp") main.cpp
+SRC = $(shell find $(SRCDIR) -type f -name "*.cpp") poll_main.cpp
 OBJ = $(SRC:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 SRCDIR = src
 OBJDIR = objs
@@ -33,15 +33,27 @@ fclean: clean
 re: fclean all
 
 # ================== poll test ==================
-MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") mac_main.cpp
+# remove epoll src dir
+MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") poll_main.cpp
 MACSRC := $(filter-out $(SRCDIR)/epoll/EpollWrapper.cpp, $(MACSRC))
+MACSRC := $(filter-out $(SRCDIR)/epoll/NewEpollWrapper.cpp, $(MACSRC))
 
-poll: $(MACSRC)
-	@$(CXX) $(CXXFLAGS) $(MACSRC) -o $(NAME)
+# remove epoll header dir
+MACSUBDIR := $(filter-out $(INCLUDEROOTDIR)/epoll, $(INCLUDESUBDIR))
+
+MACFLAGS = -Wall -Wextra -Werror -std=c++98
+MACFLAGS += $(addprefix -I, $(MACSUBDIR))
+
+echo :
+	@echo $(MACSRC)
+	@echo $(MACSUBDIR)
+
+mac: $(MACSRC)
+	@$(CXX) $(MACFLAGS) $(MACSRC) -o $(NAME)
 	@echo "Compilation done: $(NAME)"
 
-poll_debug: $(MACSRC)
-	@$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(MACSRC) -o $(DEBUFNAME)
+macdebug: $(MACSRC)
+	@$(CXX) $(MACFLAGS) $(DEBUGFLAGS) $(MACSRC) -o $(DEBUFNAME)
 	@echo "Compilation done: $(DEBUFNAME)"
 
 # ============== debug section =============
