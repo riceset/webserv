@@ -1,6 +1,7 @@
+#include "MainConf.hpp"
+
 #include <iostream>
 #include <sstream>
-#include "MainConf.hpp"
 
 // Constructor
 MainConf::MainConf(std::string conf_content) : _servers()

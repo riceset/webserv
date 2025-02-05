@@ -42,7 +42,8 @@ Listener::Listener(int port) : ASocket()
 	if(listen(fd_, SOMAXCONN) == -1)
 		throw std::runtime_error("[Listener] Failed to listen for connections");
 	if(fcntl(fd_, F_SETFL, O_NONBLOCK) == -1)
-		throw std::runtime_error("[Listener] Failed to set socket to non-blocking");
+		throw std::runtime_error(
+			"[Listener] Failed to set socket to non-blocking");
 	std::cout << "Listening on port " << port << std::endl;
 }
 

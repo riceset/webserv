@@ -8,8 +8,11 @@ EpollWrapper::EpollWrapper(int max_events, std::vector<Listener> listeners)
 	_listeners = listeners;
 	epfd_ = epoll_create(max_events);
 	if(epfd_ == -1)
-		throw std::runtime_error("[EpollWrapper] Failed to create epoll instance");
-	for (std::vector<Listener>::iterator i = _listeners.begin(); i != _listeners.end(); ++i)
+		throw std::runtime_error(
+			"[EpollWrapper] Failed to create epoll instance");
+	for(std::vector<Listener>::iterator i = _listeners.begin();
+		i != _listeners.end();
+		++i)
 	{
 		addEvent(i->getFd(), EPOLLIN);
 	}
@@ -32,7 +35,8 @@ void EpollWrapper::addEvent(int fd, uint32_t events)
 	new_event.events = events;
 	new_event.data.fd = fd;
 	if(epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &new_event) == -1)
-		throw std::runtime_error("[EpollWrapper] Failed to add event to epoll instance");
+		throw std::runtime_error(
+			"[EpollWrapper] Failed to add event to epoll instance");
 	_events.push_back(new_event);
 
 	std::cout << "add event" << std::endl;
@@ -45,11 +49,14 @@ void EpollWrapper::modifyEvent(int fd, uint32_t events)
 	modify_event.data.fd = fd;
 
 	if(epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &modify_event) == -1)
-		throw std::runtime_error("[EpollWrapper] Failed to modify event in epoll instance");
-	
-	for (std::vector<struct epoll_event>::iterator i = _events.begin(); i != _events.end(); ++i)
+		throw std::runtime_error(
+			"[EpollWrapper] Failed to modify event in epoll instance");
+
+	for(std::vector<struct epoll_event>::iterator i = _events.begin();
+		i != _events.end();
+		++i)
 	{
-		if (i->data.fd == fd)
+		if(i->data.fd == fd)
 		{
 			i->events = events;
 			break;
@@ -62,12 +69,15 @@ void EpollWrapper::modifyEvent(int fd, uint32_t events)
 void EpollWrapper::removeEvent(int fd)
 {
 	if(epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == -1)
-		throw std::runtime_error("[EpollWrapper] Failed to delete event from epoll instance");
-	
+		throw std::runtime_error(
+			"[EpollWrapper] Failed to delete event from epoll instance");
+
 	std::vector<struct epoll_event> new_events;
-	for (std::vector<struct epoll_event>::iterator i = _events.begin(); i != _events.end(); ++i)
+	for(std::vector<struct epoll_event>::iterator i = _events.begin();
+		i != _events.end();
+		++i)
 	{
-		if (i->data.fd == fd)
+		if(i->data.fd == fd)
 			continue;
 		new_events.push_back(*i);
 	}
@@ -95,9 +105,11 @@ void EpollWrapper::wait()
 	_detected_events = _events;
 	_detected_event_size = 0;
 
-	for (;;) {
-		_detected_event_size = epoll_wait(epfd_, _detected_events.data(), _detected_events.size(), 0);
-		if (_detected_event_size == 0)
+	for(;;)
+	{
+		_detected_event_size = epoll_wait(
+			epfd_, _detected_events.data(), _detected_events.size(), 0);
+		if(_detected_event_size == 0)
 		{
 			continue;
 		}
@@ -109,17 +121,19 @@ void EpollWrapper::wait()
 		break;
 	}
 
-	return ;
+	return;
 }
 
 bool EpollWrapper::is_listener(int index)
 {
-	if (!(_detected_events[index].events & EPOLLIN))
+	if(!(_detected_events[index].events & EPOLLIN))
 		return false;
 
-	for (std::vector<Listener>::const_iterator i = _listeners.begin(); i != _listeners.end(); ++i)
+	for(std::vector<Listener>::const_iterator i = _listeners.begin();
+		i != _listeners.end();
+		++i)
 	{
-		if (i->getFd() == _detected_events[index].data.fd)
+		if(i->getFd() == _detected_events[index].data.fd)
 			return true;
 	}
 	return false;
@@ -127,22 +141,23 @@ bool EpollWrapper::is_listener(int index)
 
 bool EpollWrapper::is_pollin_event(int index)
 {
-	if (!(_detected_events[index].events & EPOLLIN))
+	if(!(_detected_events[index].events & EPOLLIN))
 		return false;
 	return true;
 }
 
 bool EpollWrapper::is_pollout_event(int index)
 {
-	if (!(_detected_events[index].events & EPOLLOUT))
+	if(!(_detected_events[index].events & EPOLLOUT))
 		return false;
 	return true;
 }
 
 bool EpollWrapper::is_timeout(int index)
 {
-	Connection *conn = _connections.getConnection(_detected_events[index].data.fd);
-	if (conn->isTimeout())
+	Connection *conn =
+		_connections.getConnection(_detected_events[index].data.fd);
+	if(conn->isTimeout())
 		return true;
 	return false;
 }
@@ -150,9 +165,12 @@ bool EpollWrapper::is_timeout(int index)
 void EpollWrapper::accept(int index)
 {
 	Connection *newConn;
-	try {
+	try
+	{
 		newConn = new Connection(_listeners[index].getFd());
-	} catch (std::exception &e) {
+	}
+	catch(std::exception &e)
+	{
 		throw std::runtime_error(e.what());
 	}
 	_connections.addConnection(newConn);
@@ -161,18 +179,21 @@ void EpollWrapper::accept(int index)
 
 void EpollWrapper::read(int index)
 {
-	Connection *conn = _connections.getConnection(_detected_events[index].data.fd);
-	try {
-		conn -> readSocket();
+	Connection *conn =
+		_connections.getConnection(_detected_events[index].data.fd);
+	try
+	{
+		conn->readSocket();
 	}
-	catch (std::exception &e) {
-		if (std::string(e.what()).find("Timed out") != std::string::npos)
+	catch(std::exception &e)
+	{
+		if(std::string(e.what()).find("Timed out") != std::string::npos)
 			throw std::runtime_error(e.what());
 		else
 		{
 			removeEvent(conn->getFd());
 			_connections.removeConnection(conn->getFd());
-			return ;
+			return;
 		}
 	}
 	modifyEvent(conn->getFd(), EPOLLOUT);
@@ -180,11 +201,14 @@ void EpollWrapper::read(int index)
 
 void EpollWrapper::write(int index)
 {
-	Connection *conn = _connections.getConnection(_detected_events[index].data.fd);
-	try {
-		conn -> writeSocket();
+	Connection *conn =
+		_connections.getConnection(_detected_events[index].data.fd);
+	try
+	{
+		conn->writeSocket();
 	}
-	catch (std::exception &e) {
+	catch(std::exception &e)
+	{
 		throw std::runtime_error(e.what());
 	}
 	modifyEvent(conn->getFd(), EPOLLIN);
@@ -192,7 +216,8 @@ void EpollWrapper::write(int index)
 
 void EpollWrapper::close(int index)
 {
-	Connection *conn = _connections.getConnection(_detected_events[index].data.fd);
+	Connection *conn =
+		_connections.getConnection(_detected_events[index].data.fd);
 	removeEvent(conn->getFd());
 	_connections.removeConnection(conn->getFd());
 	shutdown(conn->getFd(), SHUT_RDWR);

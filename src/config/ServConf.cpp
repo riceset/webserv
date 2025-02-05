@@ -1,4 +1,5 @@
 #include "ServConf.hpp"
+
 #include <cstring>
 
 // Constructor

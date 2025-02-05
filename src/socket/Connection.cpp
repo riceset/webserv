@@ -35,7 +35,8 @@ Connection::Connection(int listenerFd) : ASocket()
 	if(fd_ == -1)
 		throw std::runtime_error("[Connection] Accept failed");
 	if(fcntl(fd_, F_SETFL, O_NONBLOCK))
-		throw std::runtime_error("[Connection] Failed to set socket to non-blocking");
+		throw std::runtime_error(
+			"[Connection] Failed to set socket to non-blocking");
 	request_ = NULL;
 	response_ = NULL;
 	lastActive_ = std::time(NULL);
@@ -78,9 +79,11 @@ void Connection::readSocket()
 	else if(rlen == 0)
 	{
 		if(isTimedOut())
-			throw std::runtime_error("[Connection] Timed out, Connection closed by client");
+			throw std::runtime_error(
+				"[Connection] Timed out, Connection closed by client");
 		else
-			throw std::runtime_error("[Connection] Connection closed by client");
+			throw std::runtime_error(
+				"[Connection] Connection closed by client");
 	}
 	buff[rlen] = '\0';
 	std::cout << "buff: " << buff << std::endl; // デバッグ用

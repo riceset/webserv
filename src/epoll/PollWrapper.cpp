@@ -6,7 +6,9 @@ PollWrapper::PollWrapper() {}
 PollWrapper::PollWrapper(std::vector<Listener> listeners)
 {
 	_listeners = listeners;
-	for (std::vector<Listener>::iterator i = _listeners.begin(); i != _listeners.end(); ++i)
+	for(std::vector<Listener>::iterator i = _listeners.begin();
+		i != _listeners.end();
+		++i)
 	{
 		addEvent(i->getFd(), POLLIN);
 	}
@@ -33,9 +35,11 @@ void PollWrapper::addEvent(int fd, short event_flag)
 
 void PollWrapper::modifyEvent(int fd, short event_flag)
 {
-	for (std::vector<struct pollfd>::iterator i = _events.begin(); i != _events.end(); ++i)
+	for(std::vector<struct pollfd>::iterator i = _events.begin();
+		i != _events.end();
+		++i)
 	{
-		if (i->fd == fd)
+		if(i->fd == fd)
 		{
 			i->events = event_flag;
 			break;
@@ -47,9 +51,11 @@ void PollWrapper::removeEvent(int fd)
 {
 	std::vector<struct pollfd> new_events;
 
-	for (std::vector<struct pollfd>::iterator i = _events.begin(); i != _events.end(); ++i)
+	for(std::vector<struct pollfd>::iterator i = _events.begin();
+		i != _events.end();
+		++i)
 	{
-		if (i->fd == fd)
+		if(i->fd == fd)
 			continue;
 		new_events.push_back(*i);
 	}
@@ -64,28 +70,28 @@ int PollWrapper::getEventSize() const
 	return _events.size();
 }
 
-
 // methods
 void PollWrapper::wait()
 {
 	int ret;
 
 	ret = poll(_events.data(), _events.size(), -1);
-	if (ret < 0)
+	if(ret < 0)
 	{
 		throw std::runtime_error("[PollWrapper] Poll failed");
 	}
-
 }
 
 bool PollWrapper::is_listener(int index)
 {
-	if (!(_events[index].revents & POLLIN))
+	if(!(_events[index].revents & POLLIN))
 		return false;
 
-	for (std::vector<Listener>::const_iterator i = _listeners.begin(); i != _listeners.end(); ++i)
+	for(std::vector<Listener>::const_iterator i = _listeners.begin();
+		i != _listeners.end();
+		++i)
 	{
-		if (i->getFd() == _events[index].fd)
+		if(i->getFd() == _events[index].fd)
 			return true;
 	}
 	return false;
@@ -93,14 +99,14 @@ bool PollWrapper::is_listener(int index)
 
 bool PollWrapper::is_pollin_event(int index)
 {
-	if (_events[index].revents & POLLIN)
+	if(_events[index].revents & POLLIN)
 		return true;
 	return false;
 }
 
 bool PollWrapper::is_pollout_event(int index)
 {
-	if (_events[index].revents & POLLOUT)
+	if(_events[index].revents & POLLOUT)
 		return true;
 	return false;
 }
@@ -108,7 +114,7 @@ bool PollWrapper::is_pollout_event(int index)
 bool PollWrapper::is_timeout(int index)
 {
 	Connection *conn = _connections.getConnection(_events[index].fd);
-	if (conn->isTimedOut())
+	if(conn->isTimedOut())
 		return true;
 	return false;
 }
@@ -116,9 +122,12 @@ bool PollWrapper::is_timeout(int index)
 void PollWrapper::accept(int index)
 {
 	Connection *newConn;
-	try {
+	try
+	{
 		newConn = new Connection(_events[index].fd);
-	} catch (std::exception &e) {
+	}
+	catch(std::exception &e)
+	{
 		throw std::runtime_error(e.what());
 	}
 	_connections.addConnection(newConn);
@@ -128,16 +137,18 @@ void PollWrapper::accept(int index)
 void PollWrapper::read(int index)
 {
 	Connection *conn = _connections.getConnection(_events[index].fd);
-	try {
-		conn -> readSocket();
+	try
+	{
+		conn->readSocket();
 	}
-	catch (std::exception &e) {
-		if (std::string(e.what()).find("Timed out") != std::string::npos)
+	catch(std::exception &e)
+	{
+		if(std::string(e.what()).find("Timed out") != std::string::npos)
 			throw std::runtime_error(e.what());
 		else
 		{
 			removeEvent(conn->getFd());
-			return ;
+			return;
 		}
 	}
 	modifyEvent(conn->getFd(), POLLOUT);
@@ -146,10 +157,12 @@ void PollWrapper::read(int index)
 void PollWrapper::write(int index)
 {
 	Connection *conn = _connections.getConnection(_events[index].fd);
-	try {
-		conn -> writeSocket();
+	try
+	{
+		conn->writeSocket();
 	}
-	catch (std::exception &e) {
+	catch(std::exception &e)
+	{
 		throw std::runtime_error(e.what());
 	}
 	modifyEvent(conn->getFd(), POLLIN);
