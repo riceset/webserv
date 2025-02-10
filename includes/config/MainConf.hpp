@@ -4,6 +4,8 @@
 #include "BaseConf.hpp"
 #include "ServConf.hpp"
 
+#include <sstream>
+
 class MainConf : public BaseConf
 {
 private:

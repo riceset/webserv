@@ -32,18 +32,6 @@ fclean: clean
 
 re: fclean all
 
-# ================== poll test ==================
-MACSRC = $(shell find $(SRCDIR) -type f -name "*.cpp") mac_main.cpp
-MACSRC := $(filter-out $(SRCDIR)/epoll/EpollWrapper.cpp, $(MACSRC))
-
-poll: $(MACSRC)
-	@$(CXX) $(CXXFLAGS) $(MACSRC) -o $(NAME)
-	@echo "Compilation done: $(NAME)"
-
-poll_debug: $(MACSRC)
-	@$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(MACSRC) -o $(DEBUFNAME)
-	@echo "Compilation done: $(DEBUFNAME)"
-
 # ============== debug section =============
 debug: $(OBJ)
 	@$(CXX) $(CXXFLAGS) $(DEBUGFLAGS) $(OBJ) $(INCLUDE) -o $(DEBUFNAME)

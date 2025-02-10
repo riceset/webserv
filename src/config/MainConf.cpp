@@ -94,7 +94,11 @@ std::vector<int> MainConf::get_listen()
 
 	for(size_t i = 0; i < _servers.size(); i++)
 	{
-		listen.push_back(std::stoi(_servers[i].get_listen()));
+		std::istringstream ss(_servers[i].get_listen());
+		int port;
+
+		ss >> port;
+		listen.push_back(port);
 	}
 
 	if(listen.empty())

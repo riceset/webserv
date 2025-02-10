@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <map>
+#include <cstring>
 
 #include "BaseConf.hpp"
 
