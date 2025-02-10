@@ -1,6 +1,5 @@
 name: Clang Format Check
 
-# Pull Request を main ブランチに対して行った場合に実行
 on:
   pull_request:
     branches:
@@ -16,9 +15,10 @@ jobs:
 
       - name: Set up clang-format
         run: |
-          sudo apt-get install clang-format
+          sudo apt-get update
+          sudo apt-get install -y clang-format
 
       - name: Check code formatting
         run: |
           git fetch origin main
-          git diff --exit-code --name-only --diff-filter=AM origin/main -- | xargs clang-format --dry-run --Werror
+          git diff --name-only --diff-filter=AM origin/main -- | grep -E '\.(cpp|hpp)$' | xargs clang-format --dry-run --Werror
