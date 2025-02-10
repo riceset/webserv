@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 14:54:48 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/10 19:06:43 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,11 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <algorithm>
 
 #include "HttpRequest.hpp"
+#include "MainConf.hpp"
 
 std::map<int, std::string> HttpResponse::status_code_;
 
@@ -35,13 +38,19 @@ HttpResponse::HttpResponse() {}
 HttpResponse::~HttpResponse() {}
 
 /* Constructor */
-HttpResponse::HttpResponse(HttpRequest *request)
+HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf)
 {
 	start_line_.resize(3);
 	initializeStatusCodes();
-	start_line_ = setResponseStartLine(request->getStartLine());
-	body_ = setResponseBody(request->getStartLine());
-	headers_ = setResponseHeader(request->getHeader());
+	std::string server_and_port = request->getHeader()["Host"];
+	int pos = server_and_port.find(":");
+	std::string server_name = server_and_port.substr(0, pos);
+	std::string port = server_and_port.substr(pos + 1);
+	std::string requestPath = request->getStartLine()[1];
+	conf_value_t conf_value = mainConf->get_conf_value(port, server_name, requestPath);
+	processResponseStartLine(request->getStartLine(), conf_value);
+	processResponseBody(request->getStartLine(), conf_value);
+	processResponseHeader(request->getHeader(), conf_value);
 }
 
 /* Make map data of status codes and messages */
@@ -50,68 +59,100 @@ void HttpResponse::initializeStatusCodes()
 	status_code_[200] = "OK";
 	status_code_[400] = "Bad Request";
 	status_code_[404] = "Not Found";
+	status_code_[405] = "Method Not Allowed";
 	status_code_[414] = "URI Too Long";
 	status_code_[413] = "Content Too Long";
 	status_code_[501] = "Not Implemented";
-}
-
-/* Check whether the status code is valid */
-int HttpResponse::checkStatusCode(std::vector<std::string> requestStartLine)
-{
-	if(!isValidMethod(requestStartLine[0]))
-		return 501;
-	if(!isValidPath(requestStartLine[1]))
-		return 404;
-	if(!isValidVersion(requestStartLine[2]))
-		return 501;
-	return 200;
+	status_code_[505] = "HTTP Version Not Supported";
 }
 
 /* Set the start line of the response */
-std::vector<std::string> HttpResponse::setResponseStartLine(
-	std::vector<std::string> requestStartLine)
+void HttpResponse::processResponseStartLine(std::vector<std::string> requestStartLine, conf_value_t conf_value)
 {
-	std::vector<std::string> start_line;
-	bool is_valid_method = isValidMethod(requestStartLine[0]);
-	bool is_valid_path = isValidPath(requestStartLine[1]);
-	if(isValidVersion(requestStartLine[2]))
-		start_line.push_back(requestStartLine[2]);
-	else
-		throw std::runtime_error("Invalid HTTP version");
-	if(is_valid_method == false)
+	/* Check the validity of the HTTP method */
+	if (isValidHttpVersion(requestStartLine[0]) == false)
 	{
-		setStatusCode(501, status_code_[501], start_line);
-		return start_line;
-	}
-	else if(is_valid_path == false)
+		setResponseStartLine(505);
+		return;
+	} else if (isValidHttpMethod(requestStartLine[0], conf_value._limit_except) == false)
 	{
-		setStatusCode(404, status_code_[404], start_line);
+		setResponseStartLine(405);
+		return;
+	} else if (isValidPath(requestStartLine[1], conf_value) == false)
+	{
+		setResponseStartLine(404);
+		return;
 	}
-	return start_line;
+	setResponseStartLine(200);
+	return ;
 }
 
-/* Check whether the method is valid */
-bool HttpResponse::isValidMethod(std::string method)
+/* check http version */
+bool HttpResponse::isValidHttpVersion(std::string version)
 {
-	if(method == "GET" || method == "POST" || method == "DELETE")
-		return true;
-	return false;
+	if (version != "HTTP/1.1")
+		return false;
+	return true;
 }
 
-/* Check whether the path is valid */
-bool HttpResponse::isValidPath(std::string resourse_path)
-{
-	std::string root = "./www";
-	if(resourse_path == "/")
-		resourse_path = "/index.html";
-	std::string path = root + resourse_path;
+/* check http method */
+bool HttpResponse::isValidHttpMethod(std::string method, std::vector<std::string> limit_except) {
+	if (std::find(limit_except.begin(), limit_except.end(), method) == limit_except.end()) 
+		return false;
+	return true;
+}
+
+bool HttpResponse::isValidPath(std::string request_path, conf_value_t conf_value) {
+	/* in this process, check only the existence of the requested path */
+	/* where error_page exist or not is not checked */ 
+	/* make requested path that is based wevserv root */
+	if (getLocationPath(request_path, conf_value) == "")
+		return false;
+	return true;
+}
+
+std::string HttpResponse::getLocationPath(std::string request_path, conf_value_t conf_value) {
+	std::string location_path;
 	struct stat st;
-	if(stat(path.c_str(), &st) == 0)
-		return true;
-	return false;
+	/* if request_path is directory, check the existence of index file */
+	if (std::find(request_path.begin(), request_path.end(), '/') == request_path.end()) {
+		for (size_t i = 0; i < conf_value._index.size(); i++) {
+			location_path = "." + conf_value._root + request_path + conf_value._index[i];
+			if (stat(location_path.c_str(), &st) == 0)
+				return location_path;
+		}
+	} else {
+		location_path = "." + conf_value._root + request_path;
+		if (stat(location_path.c_str(), &st) == 0)
+			return location_path;
+	}
+	return "";
 }
 
-/* Set the date of the response */
+/* Set the start line of the response */
+void HttpResponse::setResponseStartLine(int status_code) {
+	std::ostringstream oss;
+	oss << status_code;
+	start_line_[0] = "HTTP/1.1";
+	start_line_[1] = oss.str();
+	start_line_[2] = status_code_[status_code];
+}
+
+/* Set the header of the response */
+void HttpResponse::processResponseHeader(std::map<std::string, std::string> requestHeader, conf_value_t conf_value) {
+	headers_["Date"] = setDate();
+	headers_["Server"] = conf_value._server_name;
+	headers_["Content-Type"] = requestHeader["Accept"];
+	headers_["Content-Language"] = requestHeader["Accept-Language"];
+	headers_["Keep-Alive"] = "timeout=5, max=100";
+	headers_["Connection"] = requestHeader["Connection"];
+	std::size_t body_length = body_.size();
+	std::ostringstream ss;
+	ss << body_length;
+	headers_["Content-Length"] = ss.str();
+}
+
+/* make date data for response header */
 std::string HttpResponse::setDate()
 {
 	std::time_t now = std::time(NULL);
@@ -131,61 +172,28 @@ std::string HttpResponse::setDate()
 	return date_str;
 }
 
-/* Set the headers of the response */
-std::map<std::string, std::string> HttpResponse::setResponseHeader(
-	std::map<std::string, std::string> requestHeader)
-{
-	(void)requestHeader;
-	std::map<std::string, std::string> headers;
-	headers["Date"] = setDate();
-	headers["Server"] = "localhost";
-	headers["Content-Type"] = "text/html";
-	headers["Connection"] = "keep-alive";
-	headers["Keep-Alive"] = "timeout=5, max=1000";
-	std::size_t body_length = body_.size();
-	std::ostringstream ss;
-	ss << body_length;
-	headers["Content-Length"] = ss.str();
-	return headers;
-}
-
 /* Set the body of the response */
-std::string HttpResponse::setResponseBody(
-	std::vector<std::string> requestStartLine)
-{
-	std::string root = "./www";
-	std::string requestedpath = requestStartLine[1];
-	if(requestedpath == "/")
-		requestedpath = "/index.html";
-	std::string filepath = root + requestedpath;
-	std::string body;
-	std::ifstream ifs(filepath.c_str());
-	if(ifs.fail())
-		throw std::runtime_error("Failed to open file");
-	std::string line;
-	while(std::getline(ifs, line))
-		body += line;
-	ifs.close();
-	return body;
-}
-
-/* Set the status code of the response */
-void HttpResponse::setStatusCode(int code,
-								 std::string message,
-								 std::vector<std::string> &start_line)
-{
-	std::ostringstream ss;
-	ss << code;
-	start_line.push_back(ss.str());
-	start_line.push_back(message);
-}
-
-/* Check whether the version is valid */
-bool HttpResponse::isValidVersion(std::string version)
-{
-	if(version != "HTTP/1.1")
-		return false;
-	return true;
+void HttpResponse::processResponseBody(std::vector<std::string> requestStartLine, conf_value_t conf_value) {
+	std::string location_path = getLocationPath(requestStartLine[1], conf_value);
+	if (location_path == "") {
+		std::string error_page = "." + conf_value._error_page.back();
+		std::ifstream ifs(error_page.c_str());
+		if (!ifs) {
+			body_ = "<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>";
+		} else {
+			std::string line;
+			while (getline(ifs, line)) {
+				body_ += line;
+			}
+		}
+	} else {
+		std::ifstream ifs(location_path.c_str());
+		std::string line;
+		while (getline(ifs, line)) {
+			body_ += line;
+		}
+	}
+	return ;
 }
 
 std::vector<std::string> HttpResponse::getStartLine() const

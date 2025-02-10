@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/30 13:35:05 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/10 19:07:44 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,9 @@
 #include <stdexcept>
 
 #include "ASocket.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
+#include "MainConf.hpp"
 
 std::time_t Connection::timeout_ = 60;
 
@@ -89,7 +92,7 @@ void Connection::readSocket()
 }
 
 /* Writing Http response to the socket */
-void Connection::writeSocket()
+void Connection::writeSocket(MainConf *mainConf)
 {
 	if(!request_)
 	{
@@ -97,7 +100,7 @@ void Connection::writeSocket()
 	}
 	try
 	{
-		response_ = new HttpResponse(request_);
+		response_ = new HttpResponse(request_, mainConf);
 		buildResponseString();
 		ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
 		if(wlen == -1)
