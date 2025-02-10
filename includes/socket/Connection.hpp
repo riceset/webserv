@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 19:56:23 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/10 19:07:10 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "ASocket.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
+#include "MainConf.hpp"
 
 class Connection : public ASocket
 {
@@ -36,7 +37,7 @@ public:
 	~Connection();
 	int getFd() const;
 	void readSocket();
-	void writeSocket();
+	void writeSocket(MainConf *mainConf);
 	std::string getRbuff() const;
 	std::string getWbuff() const;
 	HttpRequest *getRequest() const;

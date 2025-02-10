@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 20:01:24 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/10 19:10:42 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 #include <iostream>
 #include <map>
 #include <stdexcept>
+#include <string>
+#include <vector>
+#include <fstream>
 
 #include "Connection.hpp"
 #include "ConnectionWrapper.hpp"
@@ -30,6 +33,18 @@ int main()
 {
 	try
 	{
+		/* Load configuration */
+		std::string confPath = "src/config/sample/webserv.conf";
+		std::ifstream ifs(confPath.c_str());
+		if (!ifs) {
+		    throw std::runtime_error("Failed to open configuration file");
+		}
+		// ファイル全体を文字列として読み込む
+		std::stringstream buffer;
+    	buffer << ifs.rdbuf();
+    	std::string content = buffer.str();
+		// MainConf オブジェクトを作成
+		MainConf mainConf(content);
 		/* Make Listener, EpollWrapper, ConnectionWrapper */
 		Listener listener(8080);
 		EpollWrapper epollWrapper(100);
@@ -107,7 +122,7 @@ int main()
 						try
 						{
 							/* Write Http response */
-							conn->writeSocket();
+							conn->writeSocket(&mainConf);
 							/* Change State to read */
 							epollWrapper.setEvent(conn->getFd(), EPOLLIN);
 							std::cout << "Completed writing to connection fd = "
