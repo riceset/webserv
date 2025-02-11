@@ -12,6 +12,12 @@ class CGI
 {
 private:
     std::string _scriptPath;
+
+    void createPipe(int pipefd[2]);
+    pid_t createChildProcess();
+    void executeScriptInChild(int pipefd[2]);
+    std::string readScriptOutput(int pipefd[2]);
+
 public:
     CGI(const std::string& scriptPath);
     ~CGI();
