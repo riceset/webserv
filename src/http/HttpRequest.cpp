@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 19:57:26 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/11 14:23:43 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,13 +72,15 @@ std::map<std::string, std::string> HttpRequest::parseRequestHeader(
 	if(start > end)
 		throw std::runtime_error("Header not found");
 	std::string header_str = request.substr(start, end - start);
+	/* std::cout << "header_str: " << header_str << std::endl; */
 	std::istringstream ss(header_str);
 	while(true)
 	{
 		std::string line;
 		std::getline(ss, line, '\n');
 		std::string key = line.substr(0, line.find(":"));
-		std::string value = line.substr(line.find(":") + 1, line.find("\r"));
+		std::string value = line.substr(line.find(":") + 2, line.find("\r"));
+		/* std::cout << "key: " << key << " value: " << value << std::endl; */
 		header[key] = value;
 		if(ss.eof())
 			break;
