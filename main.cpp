@@ -28,6 +28,7 @@
 #include "ConnectionWrapper.hpp"
 #include "EpollWrapper.hpp"
 #include "Listener.hpp"
+#include "CGI.hpp"
 
 int main()
 {
