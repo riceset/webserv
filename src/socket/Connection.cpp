@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/10 19:07:44 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/13 12:59:11 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,7 @@ void Connection::readSocket()
 		return;
 	}
 	buff[rlen] = '\0';
-	std::cout << "buff: " << buff << std::endl; // デバッグ用
+	/* std::cout << "buff: " << buff << std::endl; // デバッグ用 */
 	rbuff_ += buff;
 	request_ = new HttpRequest(rbuff_);
 }
@@ -102,6 +102,7 @@ void Connection::writeSocket(MainConf *mainConf)
 	{
 		response_ = new HttpResponse(request_, mainConf);
 		buildResponseString();
+		std::cout << "wbuff_: " << wbuff_ << std::endl;
 		ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
 		if(wlen == -1)
 			throw std::runtime_error("send failed");

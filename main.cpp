@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/10 19:10:42 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/14 15:05:12 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ int main()
 	try
 	{
 		/* Load configuration */
-		std::string confPath = "src/config/sample/webserv.conf";
+		std::string confPath = "src/config/sample/test.conf";
 		std::ifstream ifs(confPath.c_str());
 		if (!ifs) {
 		    throw std::runtime_error("Failed to open configuration file");
@@ -45,6 +45,7 @@ int main()
     	std::string content = buffer.str();
 		// MainConf オブジェクトを作成
 		MainConf mainConf(content);
+		/* mainConf.debug_print(); */
 		/* Make Listener, EpollWrapper, ConnectionWrapper */
 		Listener listener(8080);
 		EpollWrapper epollWrapper(100);

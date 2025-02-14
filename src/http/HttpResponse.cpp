@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/10 19:06:43 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/14 17:34:28 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,17 +40,25 @@ HttpResponse::~HttpResponse() {}
 /* Constructor */
 HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf)
 {
+	(void)mainConf;
 	start_line_.resize(3);
 	initializeStatusCodes();
 	std::string server_and_port = request->getHeader()["Host"];
 	int pos = server_and_port.find(":");
 	std::string server_name = server_and_port.substr(0, pos);
 	std::string port = server_and_port.substr(pos + 1);
-	std::string requestPath = request->getStartLine()[1];
-	conf_value_t conf_value = mainConf->get_conf_value(port, server_name, requestPath);
+	std::string request_path = request->getStartLine()[1];
+	conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path);
 	processResponseStartLine(request->getStartLine(), conf_value);
 	processResponseBody(request->getStartLine(), conf_value);
-	processResponseHeader(request->getHeader(), conf_value);
+	processResponseHeader(request->getHeader(), conf_value, request_path);
+	/* std::cout << "start_line: " << start_line_[0] << " " << start_line_[1] << " " << start_line_[2] << std::endl; */
+	/* std::map<std::string, std::string>::iterator it = headers_.begin(); */
+	/* while (it != headers_.end()) { */
+	/* 	std::cout << it->first << ": " << it->second << std::endl; */
+	/* 	it++; */
+	/* } */
+	/* std::cout << "body: " << body_ << std::endl; */
 }
 
 /* Make map data of status codes and messages */
@@ -70,7 +78,7 @@ void HttpResponse::initializeStatusCodes()
 void HttpResponse::processResponseStartLine(std::vector<std::string> requestStartLine, conf_value_t conf_value)
 {
 	/* Check the validity of the HTTP method */
-	if (isValidHttpVersion(requestStartLine[0]) == false)
+	if (isValidHttpVersion(requestStartLine[2]) == false)
 	{
 		setResponseStartLine(505);
 		return;
@@ -95,7 +103,8 @@ bool HttpResponse::isValidHttpVersion(std::string version)
 	return true;
 }
 
-/* check http method */
+/* check http method is valid */
+/* this process needs to add the process of distinguishing http method */ 
 bool HttpResponse::isValidHttpMethod(std::string method, std::vector<std::string> limit_except) {
 	if (std::find(limit_except.begin(), limit_except.end(), method) == limit_except.end()) 
 		return false;
@@ -115,9 +124,18 @@ std::string HttpResponse::getLocationPath(std::string request_path, conf_value_t
 	std::string location_path;
 	struct stat st;
 	/* if request_path is directory, check the existence of index file */
-	if (std::find(request_path.begin(), request_path.end(), '/') == request_path.end()) {
+	/* std::cout << "request_path: " << request_path << std::endl; */
+	bool is_directory = false;
+	if (request_path[request_path.size() - 1] == '/')
+		is_directory = true;
+	if (is_directory) {
 		for (size_t i = 0; i < conf_value._index.size(); i++) {
-			location_path = "." + conf_value._root + request_path + conf_value._index[i];
+			/* std::cout << "index: " << conf_value._index[i] << std::endl; */
+			std::string index_path = conf_value._index[i];
+			if (index_path[0] == '/')
+				index_path = index_path.substr(1);
+			location_path = "." + conf_value._root + request_path + index_path;
+			/* std::cout << "location_path: " << location_path << std::endl; */
 			if (stat(location_path.c_str(), &st) == 0)
 				return location_path;
 		}
@@ -138,11 +156,24 @@ void HttpResponse::setResponseStartLine(int status_code) {
 	start_line_[2] = status_code_[status_code];
 }
 
+/* check content type */
+std::string HttpResponse::checkContentType(std::string request_path, conf_value_t conf_value) {
+	std::string location_path = getLocationPath(request_path, conf_value);
+	std::string content_type;
+
+	std::string extension = location_path.substr(location_path.find_last_of(".") + 1);
+	if (extension == "html")
+		content_type = "text/html";
+	else if (extension == "json")
+		content_type = "application/json";
+	return content_type;
+}
+
 /* Set the header of the response */
-void HttpResponse::processResponseHeader(std::map<std::string, std::string> requestHeader, conf_value_t conf_value) {
+void HttpResponse::processResponseHeader(std::map<std::string, std::string> requestHeader, conf_value_t conf_value, std::string request_path) {
 	headers_["Date"] = setDate();
 	headers_["Server"] = conf_value._server_name;
-	headers_["Content-Type"] = requestHeader["Accept"];
+	headers_["Content-Type"] = checkContentType(request_path, conf_value);
 	headers_["Content-Language"] = requestHeader["Accept-Language"];
 	headers_["Keep-Alive"] = "timeout=5, max=100";
 	headers_["Connection"] = requestHeader["Connection"];
@@ -175,6 +206,7 @@ std::string HttpResponse::setDate()
 /* Set the body of the response */
 void HttpResponse::processResponseBody(std::vector<std::string> requestStartLine, conf_value_t conf_value) {
 	std::string location_path = getLocationPath(requestStartLine[1], conf_value);
+	/* std::cout << "location_path: " << location_path << std::endl; */
 	if (location_path == "") {
 		std::string error_page = "." + conf_value._error_page.back();
 		std::ifstream ifs(error_page.c_str());

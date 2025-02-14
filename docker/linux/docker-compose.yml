@@ -2,12 +2,12 @@ version: '3.8'
 services:
   cpp-env:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: ../..
+      dockerfile: docker/linux/Dockerfile
     ports:
       - "8080:8080"  # ホスト:コンテナ
     volumes:
-      - ../:/usr/src/app  # プロジェクト全体をコンテナにマウント
+      - ../../:/usr/src/app  # プロジェクト全体をコンテナにマウント
     tty: true
 networks:
   default:
