@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/11 14:26:56 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/13 11:21:46 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ int main()
     	std::string content = buffer.str();
 		// MainConf オブジェクトを作成
 		MainConf mainConf(content);
-		mainConf.debug_print();
+		/* mainConf.debug_print(); */
 		/* Make Listener, EpollWrapper, ConnectionWrapper */
 		Listener listener(8080);
 		EpollWrapper epollWrapper(100);
