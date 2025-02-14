@@ -79,6 +79,7 @@ conf_value_t MainConf::get_conf_value(std::string port,
 		if(_servers[i].get_listen() == port &&
 		   _servers[i].get_server_name() == server_name)
 		{
+			/* std::cout << "server found" << std::endl; */
 			conf_value = _servers[i].get_conf_value(path);
 			conf_value._path = path;
 			return conf_value;
