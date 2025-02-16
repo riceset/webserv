@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/13 12:59:11 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/16 17:58:05 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,23 +72,18 @@ void Connection::readSocket()
 	char buff[1024];
 	ssize_t rlen = recv(fd_, buff, sizeof(buff) - 1, 0);
 	if(rlen < 0)
-	{
-		if(errno == EAGAIN || errno == EWOULDBLOCK)
-		{
-			return;
-		}
 		throw std::runtime_error("recv failed");
-	}
 	else if(rlen == 0)
-	{
-		if(isTimedOut())
-			throw std::runtime_error("Timed out, Connection closed by client");
-		return;
+		throw std::runtime_error("connection is closed by client");
+	else if (rlen < 1023) {
+		/* std::cout << "socket size is less than 1024" << std::endl; */
+		buff[rlen] = '\0';
+		rbuff_ += buff;
+		request_ = new HttpRequest(rbuff_);
+	} else {
+		rbuff_ += buff;
 	}
-	buff[rlen] = '\0';
 	/* std::cout << "buff: " << buff << std::endl; // デバッグ用 */
-	rbuff_ += buff;
-	request_ = new HttpRequest(rbuff_);
 }
 
 /* Writing Http response to the socket */
