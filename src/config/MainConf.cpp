@@ -74,6 +74,14 @@ conf_value_t MainConf::get_conf_value(std::string port,
 {
 	conf_value_t conf_value;
 
+	// change path /dir/file.html to /dir/
+	size_t pos = path.find_last_of("/");
+	if(pos != std::string::npos)
+	{
+		path = path.substr(0, pos + 1);
+		std::cout << "path: " << path << std::endl;
+	}
+
 	for(size_t i = 0; i < _servers.size(); i++)
 	{
 		if(_servers[i].get_listen() == port &&
