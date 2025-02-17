@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/16 17:58:05 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/16 19:48:28 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-
 #include <ctime>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
+#include <functional>
 
 #include "ASocket.hpp"
 #include "HttpRequest.hpp"
@@ -81,6 +82,7 @@ void Connection::readSocket()
 		rbuff_ += buff;
 		request_ = new HttpRequest(rbuff_);
 	} else {
+		/* if recv is rlen is 1023, it means that the buffer is full */
 		rbuff_ += buff;
 	}
 	/* std::cout << "buff: " << buff << std::endl; // デバッグ用 */
@@ -89,37 +91,59 @@ void Connection::readSocket()
 /* Writing Http response to the socket */
 void Connection::writeSocket(MainConf *mainConf)
 {
+	char buff[1024];
 	if(!request_)
 	{
 		throw std::runtime_error("No request found");
 	}
-	try
-	{
+	if (response_ == NULL) {
 		response_ = new HttpResponse(request_, mainConf);
 		buildResponseString();
-		std::cout << "wbuff_: " << wbuff_ << std::endl;
-		ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0);
-		if(wlen == -1)
+		std::cout << "Http Response is not created yet, let's create!!" << std::endl;
+	}
+	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(1024));
+	std::memcpy(buff, wbuff_.data(), copy_len);
+	if (copy_len != 1024)
+		buff[copy_len] = '\0';
+	wbuff_.erase(0, copy_len);
+	ssize_t wlen = send(fd_, buff, sizeof(buff), 0);
+	std::cout << "wlen: " << wlen << std::endl;
+	if (wlen == -1)
 			throw std::runtime_error("send failed");
-		/* remove Http request instance from connection */
-		if(request_)
-			delete request_;
-		request_ = NULL;
-		/* remove Http response instance from connection */
+	if (wlen < 1024) {
 		delete response_;
+		delete request_;
 		response_ = NULL;
-		/* remove the data that was sent */
-		wbuff_.erase(0, wlen);
+		request_ = NULL;
+		std::cout << "http process is done, delete current request and response" << std::endl;
 	}
-	catch(const std::exception &e)
-	{
-		if(response_)
-		{
-			delete response_;
-			response_ = NULL;
-		}
-		throw;
-	}
+	/* try */
+	/* { */
+	/* 	response_ = new HttpResponse(request_, mainConf); */
+	/* 	buildResponseString(); */
+	/* 	/1* std::cout << "wbuff_: " << wbuff_ << std::endl; *1/ */
+	/* 	ssize_t wlen = send(fd_, wbuff_.c_str(), wbuff_.size(), 0); */
+	/* 	if(wlen == -1) */
+	/* 		throw std::runtime_error("send failed"); */
+	/* 	/1* remove Http request instance from connection *1/ */
+	/* 	if(request_) */
+	/* 		delete request_; */
+	/* 	request_ = NULL; */
+	/* 	/1* remove Http response instance from connection *1/ */
+	/* 	delete response_; */
+	/* 	response_ = NULL; */
+	/* 	/1* remove the data that was sent *1/ */
+	/* 	wbuff_.erase(0, wlen); */
+	/* } */
+	/* catch(const std::exception &e) */
+	/* { */
+	/* 	if(response_) */
+	/* 	{ */
+	/* 		delete response_; */
+	/* 		response_ = NULL; */
+	/* 	} */
+	/* 	throw; */
+	/* } */
 }
 
 std::string Connection::getRbuff() const
