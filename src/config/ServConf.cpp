@@ -164,17 +164,17 @@ LocConf select_location(std::string path, std::vector<LocConf> locations)
 {
 	size_t max_len = 0;
 	LocConf locConf;
+	std::string loc_path;
 
 	for(size_t i = 0; i < locations.size(); i++)
 	{
 		// pathの前方一致の中で長いものを優先
 		// /hoge/fuga と /hoge がある場合、/hoge/fuga が優先される
-		if(max_len < path.size() &&
-		   !std::strncmp(locations[i].get_path().c_str(),
-						 path.c_str(),
-						 locations[i].get_path().size()))
+		loc_path = locations[i].get_path();
+
+		if((max_len < path.size()) && std::strncmp(loc_path.c_str(), path.c_str(), loc_path.size()) == 0)
 		{
-			max_len = path.size();
+			max_len = loc_path.size();
 			locConf = locations[i];
 		}
 	}
