@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/14 15:05:12 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/17 12:02:23 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,12 +99,14 @@ int main()
 						try
 						{
 							/* Read Http request */
-							conn->readSocket();
-							/* Change State to write */
-							epollWrapper.setEvent(conn->getFd(), EPOLLOUT);
-							std::cout
-								<< "Completed reading from connection fd = "
-								<< current_event.data.fd << std::endl;
+							if (conn->readSocket() == true) {
+								epollWrapper.setEvent(conn->getFd(), EPOLLOUT);
+								std::cout
+									<< "Completed reading from connection fd = "
+									<< current_event.data.fd << std::endl;
+							} else {
+								std::cout << "Request is not completed" << std::endl;
+							}
 						}
 						catch(const std::runtime_error &re)
 						{
@@ -122,12 +124,14 @@ int main()
 								  << current_event.data.fd << std::endl;
 						try
 						{
-							/* Write Http response */
-							conn->writeSocket(&mainConf);
-							/* Change State to read */
-							epollWrapper.setEvent(conn->getFd(), EPOLLIN);
-							std::cout << "Completed writing to connection fd = "
+							if (conn->writeSocket(&mainConf) == true) {
+
+								epollWrapper.setEvent(conn->getFd(), EPOLLIN);
+								std::cout << "Completed writing to connection fd = "
 									  << current_event.data.fd << std::endl;
+							} else {
+								std::cout << "Response is not completed" << std::endl;
+							}
 						}
 						catch(const std::runtime_error &re)
 						{

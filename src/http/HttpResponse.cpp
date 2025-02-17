@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/16 18:47:16 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/17 09:52:14 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,8 +49,8 @@ HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf)
 	std::string port = server_and_port.substr(pos + 1);
 	std::string request_path = request->getStartLine()[1];
 	std::cout << "request_path: " << request_path << std::endl;
-	/* conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path); */
 	conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path);
+	/* conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path); */
 	processResponseStartLine(request->getStartLine(), conf_value);
 	processResponseBody(request->getStartLine(), conf_value);
 	processResponseHeader(request->getHeader(), conf_value, request_path);

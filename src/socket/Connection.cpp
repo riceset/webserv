@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/16 19:48:28 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/17 11:55:14 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,10 +68,11 @@ bool Connection::isTimedOut()
 }
 
 /* Reading Http request from the socket */
-void Connection::readSocket()
+bool Connection::readSocket()
 {
 	char buff[1024];
 	ssize_t rlen = recv(fd_, buff, sizeof(buff) - 1, 0);
+	bool is_request_end = false;
 	if(rlen < 0)
 		throw std::runtime_error("recv failed");
 	else if(rlen == 0)
@@ -81,17 +82,20 @@ void Connection::readSocket()
 		buff[rlen] = '\0';
 		rbuff_ += buff;
 		request_ = new HttpRequest(rbuff_);
+		is_request_end = true;
 	} else {
 		/* if recv is rlen is 1023, it means that the buffer is full */
 		rbuff_ += buff;
 	}
 	/* std::cout << "buff: " << buff << std::endl; // デバッグ用 */
+	return is_request_end;
 }
 
 /* Writing Http response to the socket */
-void Connection::writeSocket(MainConf *mainConf)
+bool Connection::writeSocket(MainConf *mainConf)
 {
 	char buff[1024];
+	bool is_response_end = false;
 	if(!request_)
 	{
 		throw std::runtime_error("No request found");
@@ -99,6 +103,7 @@ void Connection::writeSocket(MainConf *mainConf)
 	if (response_ == NULL) {
 		response_ = new HttpResponse(request_, mainConf);
 		buildResponseString();
+		std::cout << "wbuff_: " << wbuff_ << std::endl;
 		std::cout << "Http Response is not created yet, let's create!!" << std::endl;
 	}
 	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(1024));
@@ -106,7 +111,7 @@ void Connection::writeSocket(MainConf *mainConf)
 	if (copy_len != 1024)
 		buff[copy_len] = '\0';
 	wbuff_.erase(0, copy_len);
-	ssize_t wlen = send(fd_, buff, sizeof(buff), 0);
+	ssize_t wlen = send(fd_, buff, copy_len, 0);
 	std::cout << "wlen: " << wlen << std::endl;
 	if (wlen == -1)
 			throw std::runtime_error("send failed");
@@ -116,7 +121,9 @@ void Connection::writeSocket(MainConf *mainConf)
 		response_ = NULL;
 		request_ = NULL;
 		std::cout << "http process is done, delete current request and response" << std::endl;
+		is_response_end = true;
 	}
+	return is_response_end;
 	/* try */
 	/* { */
 	/* 	response_ = new HttpResponse(request_, mainConf); */
