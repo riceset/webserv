@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/10 19:07:10 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/17 11:48:45 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,8 @@ public:
 	Connection(int clinentFd);
 	~Connection();
 	int getFd() const;
-	void readSocket();
-	void writeSocket(MainConf *mainConf);
+	bool readSocket();
+	bool writeSocket(MainConf *mainConf);
 	std::string getRbuff() const;
 	std::string getWbuff() const;
 	HttpRequest *getRequest() const;

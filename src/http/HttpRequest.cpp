@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/14 17:33:18 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/16 18:24:50 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,8 +87,8 @@ std::map<std::string, std::string> HttpRequest::parseRequestHeader(
 		line = line.substr(0, line.size() - count);
 		std::string key = line.substr(0, line.find(":"));
 		std::string value = line.substr(line.find(":") + 2);
-		std::cout << "key: " << key << std::endl;
-		std::cout << "value: " << value << std::endl;
+		/* std::cout << "key: " << key << std::endl; */
+		/* std::cout << "value: " << value << std::endl; */
 		header[key] = value;
 		if(ss.eof())
 			break;

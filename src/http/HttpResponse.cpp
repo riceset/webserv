@@ -6,7 +6,7 @@
 /*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/14 17:34:28 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/17 09:52:14 by rmatsuba         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ HttpResponse::~HttpResponse() {}
 /* Constructor */
 HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf)
 {
-	(void)mainConf;
+	/* (void)mainConf; */
 	start_line_.resize(3);
 	initializeStatusCodes();
 	std::string server_and_port = request->getHeader()["Host"];
@@ -48,7 +48,9 @@ HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf)
 	std::string server_name = server_and_port.substr(0, pos);
 	std::string port = server_and_port.substr(pos + 1);
 	std::string request_path = request->getStartLine()[1];
+	std::cout << "request_path: " << request_path << std::endl;
 	conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path);
+	/* conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path); */
 	processResponseStartLine(request->getStartLine(), conf_value);
 	processResponseBody(request->getStartLine(), conf_value);
 	processResponseHeader(request->getHeader(), conf_value, request_path);
@@ -75,6 +77,7 @@ void HttpResponse::initializeStatusCodes()
 }
 
 /* Set the start line of the response */
+/* ここの処理は、この先変更する必要がありそう。if分岐ではなくて、再帰的にエラーを処理していけば、最も適切なエラーを書い得せるようにできそう。 */
 void HttpResponse::processResponseStartLine(std::vector<std::string> requestStartLine, conf_value_t conf_value)
 {
 	/* Check the validity of the HTTP method */
@@ -141,6 +144,7 @@ std::string HttpResponse::getLocationPath(std::string request_path, conf_value_t
 		}
 	} else {
 		location_path = "." + conf_value._root + request_path;
+		std::cout << "location_path: " << location_path << std::endl;
 		if (stat(location_path.c_str(), &st) == 0)
 			return location_path;
 	}
@@ -208,7 +212,8 @@ void HttpResponse::processResponseBody(std::vector<std::string> requestStartLine
 	std::string location_path = getLocationPath(requestStartLine[1], conf_value);
 	/* std::cout << "location_path: " << location_path << std::endl; */
 	if (location_path == "") {
-		std::string error_page = "." + conf_value._error_page.back();
+		std::string error_page = "." + conf_value._root + conf_value._error_page.back();
+		std::cout << "error_page: " << error_page << std::endl;
 		std::ifstream ifs(error_page.c_str());
 		if (!ifs) {
 			body_ = "<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>";
