@@ -25,7 +25,7 @@ CGI::CGI(std::string path)
 
 }
 
-CGI::CGI(CGI &cgi)
+CGI::CGI(const CGI &cgi)
 {
 	_fd = cgi._fd;
 	_path = cgi._path;

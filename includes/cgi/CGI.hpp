@@ -16,7 +16,7 @@ private:
 public:
 	CGI();
 	CGI(std::string path); // テスト用 本来はさまざまな値が渡される
-	CGI(CGI &cgi);
+	CGI(const CGI &cgi);
 	~CGI();
 
 	// getter

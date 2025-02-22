@@ -33,6 +33,19 @@ Connection::Connection(int listenerFd) : ASocket()
 	std::cout << "Accepted connection from " << addr_.sin_port << std::endl;
 }
 
+Connection::Connection(const Connection &other) : ASocket(other)
+{
+	fd_ = other.fd_;
+	static_fd_ = other.static_fd_;
+	cgi_ = other.cgi_;
+	rbuff_ = other.rbuff_;
+	wbuff_ = other.wbuff_;
+	static_file_buff_ = other.static_file_buff_;
+	request_ = other.request_;
+	response_ = other.response_;
+	lastActive_ = other.lastActive_;
+}
+
 Connection::~Connection()
 {
 	close(fd_);
@@ -40,7 +53,7 @@ Connection::~Connection()
 
 // ==================================== getter ====================================
 
-int Connection::getSocketFd() const
+int Connection::getFd() const
 {
 	return fd_;
 }
@@ -50,9 +63,9 @@ int Connection::getStaticFd() const
 	return static_fd_;
 }
 
-int Connection::getCGIFd() const
+CGI Connection::getCGI() const
 {
-	return cgi_.getFd();
+	return cgi_;
 }
 
 std::string Connection::getRbuff() const

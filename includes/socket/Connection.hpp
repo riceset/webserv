@@ -70,6 +70,7 @@ private:
 
 public:
 	Connection(int clinentFd);
+	Connection(const Connection &other);
 	~Connection();
 
 	// check timeout
@@ -77,9 +78,9 @@ public:
 	bool findError(MainConf &mainConf);
 
 	// getter
-	int getSocketFd() const;
+	int getFd() const;
 	int getStaticFd() const;
-	int getCGIFd() const;
+	CGI getCGI() const;
 	std::string getRbuff() const;
 	std::string getWbuff() const;
 	HttpRequest *getRequest() const;

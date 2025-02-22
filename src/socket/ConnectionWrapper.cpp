@@ -33,7 +33,7 @@ Connection *ConnectionWrapper::getConnection(int fd) const
 {
 	for(unsigned int i = 0; i < connections_.size(); i++)
 	{
-		if(connections_[i]->getSocketFd() == fd || connections_[i]->getStaticFd() == fd || connections_[i]->getDynamicFd() == fd)
+		if(connections_[i]->getFd() == fd || connections_[i]->getStaticFd() == fd || connections_[i]->getCGI().getFd() == fd)
 			return connections_[i];
 	}
 	return NULL;

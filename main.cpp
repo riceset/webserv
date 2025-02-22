@@ -31,92 +31,92 @@
 #include "CGI.hpp"
 
 // header は server で付与する必要がある
-void readStaticFile(Connection &conn, EpollWrapper &epollWrapper)
+void readStaticFile(Connection &conn, EpollWrapper &epollWrapper, int fd)
 {
 	char buff[1024];
-	ssize_t rlen = read(conn->getStaticFd(), buff, 1024);
+	ssize_t rlen = read(conn.getStaticFd(), buff, 1024);
 
 	if (rlen == -1)
 	{
 		std::cout << "read static failed" << std::endl; // debug
-		epollWrapper.deleteEvent(current_event.data.fd);
-		close(conn->getStaticFd());
+		epollWrapper.deleteEvent(fd);
+		close(conn.getStaticFd());
 		std::cout << "static file closed" << std::endl; // debug
 		return ;
 	}
 	buff[rlen] = '\0';
-	conn->setStaticBuff(buff);
+	conn.setStaticBuff(buff);
 	if (rlen < 1024)
 	{
-		epollWrapper.deleteEvent(current_event.data.fd);
-		close(conn->getStaticFd());
-		conn->setHeader();
+		epollWrapper.deleteEvent(fd);
+		close(conn.getStaticFd());
+		conn.setHeader();
 		std::cout << "static file closed" << std::endl; // debug
-		epollWrapper.setEvent(conn->getFd(), EPOLLOUT);
+		epollWrapper.setEvent(conn.getFd(), EPOLLOUT);
 		std::cout
 			<< "Completed reading from connection fd = "
-			<< current_event.data.fd << std::endl; // debug
+			<< fd << std::endl; // debug
 	}
 	return;
 }
 
 // header は CGI で作成する
-void readPipe(Connection &conn, EpollWrapper &epollWrapper)
+void readPipe(Connection &conn, EpollWrapper &epollWrapper, int fd)
 {
 	char buff[1024];
 	CGI cgi;
 
-	cgi = conn->getCGI();
+	cgi = conn.getCGI();
 	ssize_t rlen = read(cgi.getFd(), buff, 1024);
 	if (rlen == -1)
 	{
-		cgi->stopCGI();
+		cgi.killCGI();
 		std::cout << "read pipe failed" << std::endl; // debug
 		return ;
 	}
 	buff[rlen] = '\0';
-	conn->setWbuff(buff);
+	conn.setWbuff(buff);
 	if (rlen < 1024)
 	{
-		epollWrapper.deleteEvent(current_event.data.fd);
-		close(conn->getStaticFd());
+		epollWrapper.deleteEvent(fd);
+		close(conn.getStaticFd());
 		std::cout << "dynamic file closed" << std::endl; // debug
 		std::cout
 			<< "Completed reading from CGI fd = "
-			<< current_event.data.fd << std::endl; // debug
+			<< fd << std::endl; // debug
 	}
 	return;
 }
 
 // readした後にすぎにparseして、エラーケースは即座にwrite socketする
-void readSocket(Connection &conn, EpollWrapper &epollWrapper, MainConf &mainConf) {
+void readSocket(ConnectionWrapper connections, Connection &conn, EpollWrapper &epollWrapper, MainConf *mainConf, int fd) {
 	std::cout << "Reading from connection fd = "
-				<< current_event.data.fd << std::endl; // debug
+				<< fd << std::endl; // debug
 	bool read_success = false;
 	try
 	{
-		read_success = conn->readSocket();
+		read_success = conn.readSocket();
 	}
 	catch(const std::runtime_error &re)
 	{
-		epollWrapper.deleteEvent(current_event.data.fd);
-		connections.removeConnection(current_event.data.fd);
+		epollWrapper.deleteEvent(fd);
+		connections.removeConnection(fd);
 		std::cout << "Read error: " << re.what()
 					<< std::endl;
 	}
 	if (read_success == true)
 	{
-		epollWrapper.setEvent(conn->getFd(), EPOLLOUT);
-		if (conn->request_->hasError(mainConf) == true) // 404 not found など
+		epollWrapper.setEvent(conn.getFd(), EPOLLOUT);
+		if (conn.getRequest()->hasError(*mainConf) == true) // 404 not found など
 		{
 			// 404 not found などのエラーを buff につめて返す
 			return ;
 		}
 
-		switch (conn->request_->getMethod())
+		switch (conn.getRequest()->getMethod())
 		{
 			case GET:
-				int new_fd = conn->setReadFd(); // dynamic file or static file
+				int new_fd = conn.setReadFd(); // dynamic file or static file
 				epollWrapper.addEvent(new_fd);
 				break;
 			case POST:
@@ -135,25 +135,25 @@ void readSocket(Connection &conn, EpollWrapper &epollWrapper, MainConf &mainConf
 	}
 }
 
-void writeSocket(Connection &conn, EpollWrapper &epollWrapper, MainConf &mainConf) {
+void writeSocket(ConnectionWrapper connections, Connection &conn, EpollWrapper &epollWrapper, MainConf *mainConf, int fd) {
 	// todo もしも wbuff が空の場合は書き込まない
 	std::cout << "Writing to connection fd = "
-				<< current_event.data.fd << std::endl;
+			<< fd << std::endl; // debug
 	try
 	{
-		if (conn->writeSocket(mainConf) == true) {
+		if (conn.writeSocket(mainConf) == true) {
 
-			epollWrapper.setEvent(conn->getFd(), EPOLLIN);
+			epollWrapper.setEvent(conn.getFd(), EPOLLIN);
 			std::cout << "Completed writing to connection fd = "
-					<< current_event.data.fd << std::endl; // debug
+					<< fd << std::endl; // debug
 		} else {
 			std::cout << "Response is not completed" << std::endl; // debug
 		}
 	}
 	catch(const std::runtime_error &re)
 	{
-		epollWrapper.deleteEvent(current_event.data.fd);
-		connections.removeConnection(current_event.data.fd);
+		epollWrapper.deleteEvent(fd);
+		connections.removeConnection(fd);
 		std::cout << "Write error: " << re.what()
 					<< std::endl; // debug
 	}
@@ -220,7 +220,7 @@ int main()
 					std::cerr << "Connection timed out" << std::endl;
 					if (conn->getStaticFd() != -1)
 						close(conn->getStaticFd());
-					if (conn->getCGI() != -1)
+					else if (conn->getCGI().getFd() != -1)
 						conn->getCGI().killCGI();
 					epollWrapper.deleteEvent(current_event.data.fd);
 					close(conn->getFd());
@@ -231,20 +231,20 @@ int main()
 				FileTypes type = conn->getFdType(current_event.data.fd);
 				switch (type) {
 					// todo エラーハンドリングを行う
-					case STATIC:
-						readStaticFile(conn, epollWrapper);
+					case FileTypes::STATIC:
+						readStaticFile(*conn, epollWrapper);
 						break;
-					case PIPE:
-						readPipe(conn, epollWrapper);
+					case FileTypes::PIPE:
+						readPipe(*conn, epollWrapper, current_event.data.fd);
 						break;
-					case SOCKET:
+					case FileTypes::SOCKET:
 						if (current_event.events & EPOLLIN)
 						{
-							readSocket(conn, epollWrapper);
+							readSocket(*conn, epollWrapper, &mainConf, current_event.data.fd);
 						}
 						else if (current_event.events & EPOLLOUT)
 						{
-							writeSocket(conn, epollWrapper);
+							writeSocket(connections, *conn, epollWrapper, &mainConf, current_event.data.fd);
 						}
 						break;
 					default:
