@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConnectionWrapper.hpp                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 22:49:57 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/26 23:03:35 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/22 16:05:35 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,11 @@ private:
 public:
 	ConnectionWrapper();
 	~ConnectionWrapper();
+
+	// getter
 	Connection *getConnection(int fd) const;
+
+	// setter
 	void removeConnection(int fd);
 	void addConnection(Connection *conn);
 };

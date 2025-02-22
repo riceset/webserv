@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/17 09:52:14 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/23 02:08:07 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 
 #include "HttpRequest.hpp"
 #include "MainConf.hpp"
+#include "CGI.hpp"
 
 std::map<int, std::string> HttpResponse::status_code_;
 
@@ -38,9 +39,9 @@ HttpResponse::HttpResponse() {}
 HttpResponse::~HttpResponse() {}
 
 /* Constructor */
-HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf)
+HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf) // ? この内容をread読んだ直後に行うべき
 {
-	/* (void)mainConf; */
+	// init
 	start_line_.resize(3);
 	initializeStatusCodes();
 	std::string server_and_port = request->getHeader()["Host"];
@@ -48,19 +49,13 @@ HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf)
 	std::string server_name = server_and_port.substr(0, pos);
 	std::string port = server_and_port.substr(pos + 1);
 	std::string request_path = request->getStartLine()[1];
-	std::cout << "request_path: " << request_path << std::endl;
+	// std::cout << "request_path: " << request_path << std::endl;
 	conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path);
-	/* conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path); */
+
+	// process
 	processResponseStartLine(request->getStartLine(), conf_value);
-	processResponseBody(request->getStartLine(), conf_value);
 	processResponseHeader(request->getHeader(), conf_value, request_path);
-	/* std::cout << "start_line: " << start_line_[0] << " " << start_line_[1] << " " << start_line_[2] << std::endl; */
-	/* std::map<std::string, std::string>::iterator it = headers_.begin(); */
-	/* while (it != headers_.end()) { */
-	/* 	std::cout << it->first << ": " << it->second << std::endl; */
-	/* 	it++; */
-	/* } */
-	/* std::cout << "body: " << body_ << std::endl; */
+	processResponseBody(request->getStartLine(), conf_value); // こちらを修正する response body は事前に作成を行う
 }
 
 /* Make map data of status codes and messages */
@@ -210,6 +205,7 @@ std::string HttpResponse::setDate()
 /* Set the body of the response */
 void HttpResponse::processResponseBody(std::vector<std::string> requestStartLine, conf_value_t conf_value) {
 	std::string location_path = getLocationPath(requestStartLine[1], conf_value);
+	int path_size = location_path.size();
 	/* std::cout << "location_path: " << location_path << std::endl; */
 	if (location_path == "") {
 		std::string error_page = "." + conf_value._root + conf_value._error_page.back();
@@ -223,7 +219,12 @@ void HttpResponse::processResponseBody(std::vector<std::string> requestStartLine
 				body_ += line;
 			}
 		}
+	}
+	else if (path_size > 4 && location_path.substr(path_size - 4, 4) == ".php") { // cgiに渡すべきかどうかの検証 抜根的な改革が必要
+		CGI cgi(location_path);
+		body_ = cgi.getFd();
 	} else {
+		// ? この処理をfdの中に入れるべきだと考える
 		std::ifstream ifs(location_path.c_str());
 		std::string line;
 		while (getline(ifs, line)) {

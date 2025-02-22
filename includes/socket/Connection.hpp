@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Connection.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/17 11:48:45 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/23 02:08:31 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,37 +15,98 @@
 
 #include <ctime>
 #include <string>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <ctime>
+#include <iostream>
+#include <stdexcept>
+#include <algorithm>
+#include <functional>
+#include <cstring>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 #include "ASocket.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "MainConf.hpp"
+#include "MainConf.hpp"
+#include "CGI.hpp"
+
+// enum
+enum class FileTypes
+{
+	STATIC,
+	PIPE,
+	SOCKET,
+};
 
 class Connection : public ASocket
 {
 private:
 	Connection();
+
+	// file
+	CGI cgi_; // dynamic file
+	int static_fd_; // static file
+
+	// buffer
 	std::string rbuff_;
 	std::string wbuff_;
+	std::string static_file_buff_;
+
+	// request and response
 	HttpRequest *request_;
 	HttpResponse *response_;
+	
+	// conf
+	conf_value_t conf_value_;
+
+	// timeout
 	std::time_t lastActive_;
 	static std::time_t timeout_;
 
 public:
 	Connection(int clinentFd);
 	~Connection();
-	int getFd() const;
-	bool readSocket();
-	bool writeSocket(MainConf *mainConf);
+
+	// check timeout
+	bool isTimedOut();
+	bool findError(MainConf &mainConf);
+
+	// getter
+	int getSocketFd() const;
+	int getStaticFd() const;
+	int getCGIFd() const;
 	std::string getRbuff() const;
 	std::string getWbuff() const;
 	HttpRequest *getRequest() const;
-	bool isTimedOut();
+	FileTypes getFdType(int fd) const;
+
+	// setter
 	void buildResponseString();
+	void setWbuff(std::string wbuff);
+	int setReadFd();
+	void setStaticBuff(std::string static_buff);
+
+	// read and write
+	bool readSocket();
+	bool writeSocket(MainConf *mainConf);
 };
 
 /* Connection *getConnection(std::vector<Connection *> &connections, int fd); */
 std::string vecToString(std::vector<std::string> vec);
 std::string mapToString(std::map<std::string, std::string>);
+
+// enum
+enum class Method
+{
+	GET,
+	POST,
+	DELETE,
+};
+
+
 #endif
