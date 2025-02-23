@@ -99,7 +99,7 @@ public:
 
 	// read and write
 	bool readSocket();
-	bool writeSocket(MainConf *mainConf);
+	bool writeSocket();
 };
 
 /* Connection *getConnection(std::vector<Connection *> &connections, int fd); */
