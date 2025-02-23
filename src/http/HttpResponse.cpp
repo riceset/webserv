@@ -51,7 +51,7 @@ void HttpResponse::initializeStatusCodes()
 
 HttpResponse::HttpResponse()
 {
-	// init
+	start_line_.resize(3);
 	initializeStatusCodes();
 }
 
@@ -69,12 +69,14 @@ void HttpResponse::processResponseStartLine(std::vector<std::string> requestStar
 		status_code_ = 505;
 		setResponseStartLine(505);
 		return;
-	} else if (isValidHttpMethod(requestStartLine[0], conf_value._limit_except) == false)
+	}
+	else if (isValidHttpMethod(requestStartLine[0], conf_value._limit_except) == false)
 	{
 		status_code_ = 405;
 		setResponseStartLine(405);
 		return;
-	} else if (isValidPath(requestStartLine[1], conf_value) == false)
+	}
+	else if (isValidPath(requestStartLine[1], conf_value) == false)
 	{
 		status_code_ = 404;
 		setResponseStartLine(404);

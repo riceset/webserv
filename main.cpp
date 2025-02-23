@@ -132,6 +132,7 @@ FileStatus readSocket(Connection &conn) {
 	}
 	if (is_read == true)
 	{
+		std::cout << "[main.cpp] read connection completed" << std::endl;
 		return SUCCESS;
 	}
 	return NOT_COMPLETED;
@@ -161,7 +162,7 @@ std::string getConfContent() {
 	std::string confPath = "src/config/sample/test.conf";
 	std::ifstream ifs(confPath.c_str());
 	if (!ifs) {
-		throw std::runtime_error("Failed to open configuration file");
+		throw std::runtime_error("[main.cpp] Failed to open configuration file");
 	}
 	std::stringstream buffer;
 	buffer << ifs.rdbuf();
@@ -187,9 +188,11 @@ int main()
 		int nfds = epollWrapper.epwait();
 		for(int i = 0; i < nfds; ++i)
 		{
+			std::cout << "[main.cpp] epoll while [" << i << "]" << std::endl;
+
 			struct epoll_event current_event = epollWrapper[i];
 			int target_fd = current_event.data.fd;
-			std::cout << "Event on fd=" << target_fd
+			std::cout << "[main.cpp] Event on fd=" << target_fd
 						<< std::endl;
 			if(target_fd == listener.getFd())
 			{
@@ -201,7 +204,7 @@ int main()
 				}
 				catch(const std::exception &e)
 				{
-					std::cerr << "Accept failed: " << e.what() << std::endl;
+					std::cerr << "[main.cpp] Accept failed: " << e.what() << std::endl;
 				}
 			}
 			else
@@ -210,13 +213,13 @@ int main()
 
 				if(!conn)
 				{
-					std::cerr << "Connection not found" << std::endl;
+					std::cerr << "[main.cpp] Connection not found" << std::endl;
 					continue;
 				}
 				if(conn->isTimedOut())
 				{
 					// todo 503 time out の実装が必要
-					std::cerr << "Connection timed out" << std::endl;
+					std::cerr << "[main.cpp] Connection timed out" << std::endl;
 					if (conn->getStaticFd() != -1)
 						close(conn->getStaticFd());
 					else if (conn->getCGI().getFd() != -1)

@@ -30,7 +30,7 @@ Connection::Connection(int listenerFd) : ASocket()
 	request_ = NULL;
 	response_ = NULL;
 	lastActive_ = std::time(NULL);
-	std::cout << "Accepted connection from " << addr_.sin_port << std::endl;
+	std::cout << "[connection] Accepted connection from sin_port = " << addr_.sin_port << std::endl;
 }
 
 Connection::Connection(const Connection &other) : ASocket(other)
@@ -124,9 +124,17 @@ int Connection::setReadFd()
 
 int Connection::setErrorFd()
 {
-	std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
+	// std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
+	std::string error_page = "/home/atokamot/git-cursus/webserv/www/404.html"; // テスト用
+
+	std::cout << "[connection] error_page: " << error_page << " is set" << std::endl;
 	int fd = open(error_page.c_str(), O_RDONLY);
 	// ! エラーハンドリング
+	if (fd == -1)
+	{
+		std::cerr << "[connection] open failed" << std::endl;
+		return -1;
+	}
 	error_fd_ = fd;
 
 	return fd;
@@ -153,6 +161,8 @@ void Connection::setStaticBuff(std::string static_buff)
 void Connection::setHttpRequest(MainConf *mainConf)
 {
 	request_ = new HttpRequest(rbuff_, mainConf);
+	std::cout << "[connection] request is set" << std::endl;
+	// std::cout << rbuff_ << std::endl;
 }
 
 void Connection::setHttpResponse()
@@ -161,6 +171,7 @@ void Connection::setHttpResponse()
 	response_->processResponseStartLine(request_->getStartLine(), conf_value_);
 	response_->processResponseHeader(request_->getHeader(), conf_value_, request_->getLocationPath());
 	// body は後で処理する
+	std::cout << "[connection] response is set (tmp header is set)" << std::endl;
 }
 
 // ==================================== check ==============================================
@@ -168,7 +179,7 @@ void Connection::setHttpResponse()
 bool Connection::isTimedOut()
 {
 	std::time_t now = std::time(NULL);
-	std::cout << "now: " << now << std::endl;
+	std::cout << "[connection] now time : " << now << std::endl;
 	if(now - lastActive_ > timeout_)
 		return true;
 	lastActive_ = now;
