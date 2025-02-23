@@ -24,12 +24,20 @@ HttpRequest::HttpRequest() {}
 
 HttpRequest::~HttpRequest() {}
 
-HttpRequest::HttpRequest(std::string request)
+HttpRequest::HttpRequest(std::string request, MainConf *mainConf)
 {
 	start_line_.resize(3);
 	start_line_ = parseRequestStartLine(request);
 	headers_ = parseRequestHeader(request);
 	body_ = parseRequestBody(request);
+
+	std::string server_and_port = headers_["Host"];
+	int pos = server_and_port.find(":");
+
+	server_name_ = server_and_port.substr(0, pos);
+	port_ = server_and_port.substr(pos + 1);
+	request_path_ = start_line_[1];
+	conf_value_ = mainConf->get_conf_value(port_, server_name_, request_path_);
 }
 
 // ==================================== getter ====================================
@@ -68,7 +76,6 @@ METHOD HttpRequest::getMethod() const
 	else if(method == "HEAD")
 		return HEAD;
 }
-		
 
 // ==================================== setter ====================================
 
@@ -128,53 +135,74 @@ std::string HttpRequest::parseRequestBody(std::string request)
 	return body;
 }
 
-// ==================================== check ==============================================
+// ==================================== checker ====================================
 
-std::string joinPath(std::string request_path, conf_value_t conf_value) {
+// response でパースを行うのが遅いのと、参照するものもすべてリクエスト内にあるのでこちらに移動
+
+bool HttpRequest::isValidHttpVersion()
+{
+	std::string version = start_line_[2];
+	
+	if (version != "HTTP/1.1")
+		return false;
+	return true;
+}
+
+/* this process needs to add the process of distinguishing http method */ 
+bool HttpRequest::isValidHttpMethod() {
+	std::string method = start_line_[0];
+	std::vector<std::string> limit_except = conf_value_._limit_except;
+
+	if (std::find(limit_except.begin(), limit_except.end(), method) == limit_except.end()) 
+		return false;
+	return true;
+}
+
+bool HttpRequest::isValidPath() {
+	/* in this process, check only the existence of the requested path */
+	/* where error_page exist or not is not checked */ 
+	/* make requested path that is based wevserv root */
+	if (getLocationPath(request_path_, conf_value_) == "")
+		return false;
+	return true;
+}
+
+bool HttpRequest::isValidRequest() { // request 読みたての段階でわかるエラー
+	if (!isValidHttpVersion())
+		return false;
+	if (!isValidHttpMethod())
+		return false;
+	if (!isValidPath())
+		return false;
+	return true;
+}
+
+// ==================================== utils ====================================
+
+std::string HttpRequest::getLocationPath(std::string request_path, conf_value_t conf_value) {
 	std::string location_path;
 	struct stat st;
-
+	/* if request_path is directory, check the existence of index file */
+	/* std::cout << "request_path: " << request_path << std::endl; */
 	bool is_directory = false;
 	if (request_path[request_path.size() - 1] == '/')
 		is_directory = true;
 	if (is_directory) {
 		for (size_t i = 0; i < conf_value._index.size(); i++) {
+			/* std::cout << "index: " << conf_value._index[i] << std::endl; */
 			std::string index_path = conf_value._index[i];
 			if (index_path[0] == '/')
 				index_path = index_path.substr(1);
 			location_path = "." + conf_value._root + request_path + index_path;
+			/* std::cout << "location_path: " << location_path << std::endl; */
 			if (stat(location_path.c_str(), &st) == 0)
 				return location_path;
-			throw std::runtime_error("file not found");
 		}
 	} else {
 		location_path = "." + conf_value._root + request_path;
 		std::cout << "location_path: " << location_path << std::endl;
 		if (stat(location_path.c_str(), &st) == 0)
 			return location_path;
-		throw std::runtime_error("file not found");
 	}
 	return "";
-}
-
-bool HttpRequest::hasError(MainConf &mainConf)
-{
-	std::string request_path = start_line_[1];
-
-	std::string server_and_port = headers_["Host"];
-	int pos = server_and_port.find(":");
-	std::string server_name = server_and_port.substr(0, pos);
-	std::string port = server_and_port.substr(pos + 1);
-	std::string location_path;
-
-	
-	try {
-		location_path = joinPath(request_path, mainConf.get_conf_value(port, server_name, request_path));
-		location_path_ = location_path;
-	} catch (std::runtime_error &e) {
-		// todo 404の処理
-		return true;
-	}
-
-	return false;
 }

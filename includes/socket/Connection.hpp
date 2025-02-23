@@ -51,6 +51,7 @@ private:
 	// file
 	CGI cgi_; // dynamic file
 	int static_fd_; // static file
+	int error_fd_;  // error page file
 
 	// buffer
 	std::string rbuff_;
@@ -84,13 +85,17 @@ public:
 	std::string getRbuff() const;
 	std::string getWbuff() const;
 	HttpRequest *getRequest() const;
+	HttpResponse *getResponse() const;
 	FileTypes getFdType(int fd) const;
 
 	// setter
 	void buildResponseString();
 	void setWbuff(std::string wbuff);
 	int setReadFd();
+	int setErrorFd();
 	void setStaticBuff(std::string static_buff);
+	void setHttpRequest(MainConf *mainConf);
+	void setHttpResponse();
 
 	// read and write
 	bool readSocket();

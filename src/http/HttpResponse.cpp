@@ -32,44 +32,32 @@
 #include "MainConf.hpp"
 #include "CGI.hpp"
 
-std::map<int, std::string> HttpResponse::status_code_;
-
-HttpResponse::HttpResponse() {}
-
-HttpResponse::~HttpResponse() {}
-
-/* Constructor */
-HttpResponse::HttpResponse(HttpRequest *request, MainConf *mainConf) // ? この内容をread読んだ直後に行うべき
-{
-	// init
-	start_line_.resize(3);
-	initializeStatusCodes();
-	std::string server_and_port = request->getHeader()["Host"];
-	int pos = server_and_port.find(":");
-	std::string server_name = server_and_port.substr(0, pos);
-	std::string port = server_and_port.substr(pos + 1);
-	std::string request_path = request->getStartLine()[1];
-	// std::cout << "request_path: " << request_path << std::endl;
-	conf_value_t conf_value = mainConf->get_conf_value(port, server_name, request_path);
-
-	// process
-	processResponseStartLine(request->getStartLine(), conf_value);
-	processResponseHeader(request->getHeader(), conf_value, request_path);
-	processResponseBody(request->getStartLine(), conf_value); // こちらを修正する response body は事前に作成を行う
-}
+std::map<int, std::string> HttpResponse::status_codes_; // ? ここで用いるのは適切か？　header or static に移動させるべきかもしれない
 
 /* Make map data of status codes and messages */
 void HttpResponse::initializeStatusCodes()
 {
-	status_code_[200] = "OK";
-	status_code_[400] = "Bad Request";
-	status_code_[404] = "Not Found";
-	status_code_[405] = "Method Not Allowed";
-	status_code_[414] = "URI Too Long";
-	status_code_[413] = "Content Too Long";
-	status_code_[501] = "Not Implemented";
-	status_code_[505] = "HTTP Version Not Supported";
+	status_codes_[200] = "OK";
+	status_codes_[400] = "Bad Request";
+	status_codes_[404] = "Not Found";
+	status_codes_[405] = "Method Not Allowed";
+	status_codes_[414] = "URI Too Long";
+	status_codes_[413] = "Content Too Long";
+	status_codes_[501] = "Not Implemented";
+	status_codes_[505] = "HTTP Version Not Supported";
 }
+
+// ==================================== constructor and destructor ====================================
+
+HttpResponse::HttpResponse()
+{
+	// init
+	initializeStatusCodes();
+}
+
+HttpResponse::~HttpResponse() {}
+
+// ==================================== setter ====================================
 
 /* Set the start line of the response */
 /* ここの処理は、この先変更する必要がありそう。if分岐ではなくて、再帰的にエラーを処理していけば、最も適切なエラーを書い得せるようにできそう。 */
@@ -78,72 +66,23 @@ void HttpResponse::processResponseStartLine(std::vector<std::string> requestStar
 	/* Check the validity of the HTTP method */
 	if (isValidHttpVersion(requestStartLine[2]) == false)
 	{
+		status_code_ = 505;
 		setResponseStartLine(505);
 		return;
 	} else if (isValidHttpMethod(requestStartLine[0], conf_value._limit_except) == false)
 	{
+		status_code_ = 405;
 		setResponseStartLine(405);
 		return;
 	} else if (isValidPath(requestStartLine[1], conf_value) == false)
 	{
+		status_code_ = 404;
 		setResponseStartLine(404);
 		return;
 	}
+	status_code_ = 200;
 	setResponseStartLine(200);
 	return ;
-}
-
-/* check http version */
-bool HttpResponse::isValidHttpVersion(std::string version)
-{
-	if (version != "HTTP/1.1")
-		return false;
-	return true;
-}
-
-/* check http method is valid */
-/* this process needs to add the process of distinguishing http method */ 
-bool HttpResponse::isValidHttpMethod(std::string method, std::vector<std::string> limit_except) {
-	if (std::find(limit_except.begin(), limit_except.end(), method) == limit_except.end()) 
-		return false;
-	return true;
-}
-
-bool HttpResponse::isValidPath(std::string request_path, conf_value_t conf_value) {
-	/* in this process, check only the existence of the requested path */
-	/* where error_page exist or not is not checked */ 
-	/* make requested path that is based wevserv root */
-	if (getLocationPath(request_path, conf_value) == "")
-		return false;
-	return true;
-}
-
-std::string HttpResponse::getLocationPath(std::string request_path, conf_value_t conf_value) {
-	std::string location_path;
-	struct stat st;
-	/* if request_path is directory, check the existence of index file */
-	/* std::cout << "request_path: " << request_path << std::endl; */
-	bool is_directory = false;
-	if (request_path[request_path.size() - 1] == '/')
-		is_directory = true;
-	if (is_directory) {
-		for (size_t i = 0; i < conf_value._index.size(); i++) {
-			/* std::cout << "index: " << conf_value._index[i] << std::endl; */
-			std::string index_path = conf_value._index[i];
-			if (index_path[0] == '/')
-				index_path = index_path.substr(1);
-			location_path = "." + conf_value._root + request_path + index_path;
-			/* std::cout << "location_path: " << location_path << std::endl; */
-			if (stat(location_path.c_str(), &st) == 0)
-				return location_path;
-		}
-	} else {
-		location_path = "." + conf_value._root + request_path;
-		std::cout << "location_path: " << location_path << std::endl;
-		if (stat(location_path.c_str(), &st) == 0)
-			return location_path;
-	}
-	return "";
 }
 
 /* Set the start line of the response */
@@ -152,10 +91,9 @@ void HttpResponse::setResponseStartLine(int status_code) {
 	oss << status_code;
 	start_line_[0] = "HTTP/1.1";
 	start_line_[1] = oss.str();
-	start_line_[2] = status_code_[status_code];
+	start_line_[2] = status_codes_[status_code];
 }
 
-/* check content type */
 std::string HttpResponse::checkContentType(std::string request_path, conf_value_t conf_value) {
 	std::string location_path = getLocationPath(request_path, conf_value);
 	std::string content_type;
@@ -234,6 +172,8 @@ void HttpResponse::processResponseBody(std::vector<std::string> requestStartLine
 	return ;
 }
 
+// ==================================== getter ====================================
+
 std::vector<std::string> HttpResponse::getStartLine() const
 {
 	return start_line_;
@@ -247,4 +187,64 @@ std::map<std::string, std::string> HttpResponse::getHeader() const
 std::string HttpResponse::getBody() const
 {
 	return body_;
+}
+
+int HttpResponse::getStatusCode() const
+{
+	return status_code_;
+}
+
+// ==================================== checker ====================================
+
+bool HttpResponse::isValidHttpVersion(std::string version)
+{
+	if (version != "HTTP/1.1")
+		return false;
+	return true;
+}
+
+/* this process needs to add the process of distinguishing http method */ 
+bool HttpResponse::isValidHttpMethod(std::string method, std::vector<std::string> limit_except) {
+	if (std::find(limit_except.begin(), limit_except.end(), method) == limit_except.end()) 
+		return false;
+	return true;
+}
+
+bool HttpResponse::isValidPath(std::string request_path, conf_value_t conf_value) {
+	/* in this process, check only the existence of the requested path */
+	/* where error_page exist or not is not checked */ 
+	/* make requested path that is based wevserv root */
+	if (getLocationPath(request_path, conf_value) == "")
+		return false;
+	return true;
+}
+
+// ==================================== utils ====================================
+
+std::string HttpResponse::getLocationPath(std::string request_path, conf_value_t conf_value) {
+	std::string location_path;
+	struct stat st;
+	/* if request_path is directory, check the existence of index file */
+	/* std::cout << "request_path: " << request_path << std::endl; */
+	bool is_directory = false;
+	if (request_path[request_path.size() - 1] == '/')
+		is_directory = true;
+	if (is_directory) {
+		for (size_t i = 0; i < conf_value._index.size(); i++) {
+			/* std::cout << "index: " << conf_value._index[i] << std::endl; */
+			std::string index_path = conf_value._index[i];
+			if (index_path[0] == '/')
+				index_path = index_path.substr(1);
+			location_path = "." + conf_value._root + request_path + index_path;
+			/* std::cout << "location_path: " << location_path << std::endl; */
+			if (stat(location_path.c_str(), &st) == 0)
+				return location_path;
+		}
+	} else {
+		location_path = "." + conf_value._root + request_path;
+		std::cout << "location_path: " << location_path << std::endl;
+		if (stat(location_path.c_str(), &st) == 0)
+			return location_path;
+	}
+	return "";
 }

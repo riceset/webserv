@@ -25,35 +25,36 @@
 class HttpResponse : public AHttp
 {
 	private:
-		HttpResponse();
-		static std::map<int, std::string> status_code_;
-
-		// setter
-		void processResponseStartLine(std::vector<std::string> requestStartLine, conf_value_t conf_value);
-		void processResponseHeader(std::map<std::string, std::string> requestHeader, conf_value_t conf_value, std::string request_path);
-		void processResponseBody(std::vector<std::string> requestStartLine, conf_value_t conf_value);
+		static std::map<int, std::string> status_codes_; // ? Ahttp に移動させるべきかもしれない
+		int status_code_;
 
 	public:
 		// constructor
-		HttpResponse(HttpRequest *request, MainConf *mainConf);
+		HttpResponse();
 		~HttpResponse();
 
 		// error check
 		bool isValidHttpVersion(std::string version);
 		bool isValidHttpMethod(std::string method, std::vector<std::string> limit_except);
 		bool isValidPath(std::string request_path, conf_value_t conf_value);
-		std::string checkContentType(std::string request_path, conf_value_t conf_value);
 
 		// setter
 		static void initializeStatusCodes();
 		void setResponseStartLine(int status_code);
 		std::string setDate();
+		void processResponseStartLine(std::vector<std::string> requestStartLine, conf_value_t conf_value);
+		void processResponseHeader(std::map<std::string, std::string> requestHeader, conf_value_t conf_value, std::string request_path);
+		void processResponseBody(std::vector<std::string> requestStartLine, conf_value_t conf_value);
 
 		// getter
 		std::string getLocationPath(std::string request_path, conf_value_t conf_value);
 		std::vector<std::string> getStartLine() const;
 		std::map<std::string, std::string> getHeader() const;
 		std::string getBody() const;
+		int getStatusCode() const;
+
+		// utils
+		std::string checkContentType(std::string request_path, conf_value_t conf_value);
 };
 
 #endif

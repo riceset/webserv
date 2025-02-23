@@ -15,6 +15,16 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <algorithm>
 
 #include "AHttp.hpp"
 #include "MainConf.hpp"
@@ -37,7 +47,11 @@ class HttpRequest : public AHttp
 private:
 	HttpRequest();
 
+	std::string server_name_;
+	std::string port_;
+	std::string request_path_;
 	std::string location_path_;
+	conf_value_t conf_value_;
 
 	// parse
 	std::vector<std::string> parseRequestStartLine(std::string request);
@@ -46,7 +60,7 @@ private:
 
 public:
 	// constructor
-	HttpRequest(std::string request);
+	HttpRequest(std::string request, MainConf *mainConf);
 	~HttpRequest();
 
 	// getter
@@ -57,7 +71,13 @@ public:
 	METHOD getMethod() const;
 
 	// checker
-	bool hasError(MainConf &mainConf);
+	bool isValidHttpVersion();
+	bool isValidHttpMethod();
+	bool isValidPath();
+	bool isValidRequest();
+
+	// utils
+	std::string getLocationPath(std::string request_path, conf_value_t conf_value);
 };
 
 #endif

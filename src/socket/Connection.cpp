@@ -83,6 +83,11 @@ HttpRequest *Connection::getRequest() const
 	return request_;
 }
 
+HttpResponse *Connection::getResponse() const
+{
+	return response_;
+}
+
 FileTypes Connection::getFdType(int fd) const
 {
 	if (fd == static_fd_)
@@ -117,6 +122,16 @@ int Connection::setReadFd()
 	}
 }
 
+int Connection::setErrorFd()
+{
+	std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
+	int fd = open(error_page.c_str(), O_RDONLY);
+	// ! エラーハンドリング
+	error_fd_ = fd;
+
+	return fd;
+}
+
 void Connection::buildResponseString()
 {
 	std::string startLine = vecToString(response_->getStartLine());
@@ -135,6 +150,18 @@ void Connection::setStaticBuff(std::string static_buff)
 	static_file_buff_ += static_buff;
 }
 
+void Connection::setHttpRequest(MainConf *mainConf)
+{
+	request_ = new HttpRequest(rbuff_, mainConf);
+}
+
+void Connection::setHttpResponse()
+{
+	response_ = new HttpResponse();
+	response_->processResponseStartLine(request_->getStartLine(), conf_value_);
+	response_->processResponseHeader(request_->getHeader(), conf_value_, request_->getLocationPath());
+	// body は後で処理する
+}
 
 // ==================================== check ==============================================
 
@@ -163,7 +190,6 @@ bool Connection::readSocket()
 	else if (rlen < 1023) {
 		buff[rlen] = '\0';
 		rbuff_ += buff;
-		request_ = new HttpRequest(rbuff_);
 		is_request_end = true;
 	} else {
 		rbuff_ += buff;
@@ -172,7 +198,7 @@ bool Connection::readSocket()
 	return is_request_end;
 }
 
-bool Connection::writeSocket(MainConf *mainConf)
+bool Connection::writeSocket()
 {
 	char buff[1024];
 	bool is_response_end = false;
@@ -183,7 +209,7 @@ bool Connection::writeSocket(MainConf *mainConf)
 	}
 	// write socket する前に header は欲しいと思う
 	if (response_ == NULL) {
-		response_ = new HttpResponse(request_, mainConf);
+		response_ = new HttpResponse(request_, mainConf); // todo ここは修正
 		buildResponseString();
 		std::cout << "wbuff_: " << wbuff_ << std::endl; // debug
 		std::cout << "Http Response is not created yet, let's create!!" << std::endl; // debug
