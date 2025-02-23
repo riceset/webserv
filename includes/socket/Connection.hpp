@@ -35,8 +35,7 @@
 #include "MainConf.hpp"
 #include "CGI.hpp"
 
-// enum
-enum class FileTypes
+enum FileTypes
 {
 	STATIC,
 	PIPE,
@@ -105,14 +104,6 @@ public:
 /* Connection *getConnection(std::vector<Connection *> &connections, int fd); */
 std::string vecToString(std::vector<std::string> vec);
 std::string mapToString(std::map<std::string, std::string>);
-
-// enum
-enum class Method
-{
-	GET,
-	POST,
-	DELETE,
-};
 
 
 #endif

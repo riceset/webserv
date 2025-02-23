@@ -91,11 +91,11 @@ HttpResponse *Connection::getResponse() const
 FileTypes Connection::getFdType(int fd) const
 {
 	if (fd == static_fd_)
-		return FileTypes::STATIC;
+		return STATIC;
 	else if (fd == cgi_.getFd())
-		return FileTypes::PIPE;
+		return PIPE;
 	else
-		return FileTypes::SOCKET;
+		return SOCKET;
 }
 
 // ==================================== setter ====================================
@@ -205,15 +205,10 @@ bool Connection::writeSocket()
 
 	if(!request_)
 	{
-		throw std::runtime_error("No request found");
+		throw std::runtime_error("No request found"); // todo この例外は未対応
 	}
-	// write socket する前に header は欲しいと思う
-	if (response_ == NULL) {
-		response_ = new HttpResponse(request_, mainConf); // todo ここは修正
-		buildResponseString();
-		std::cout << "wbuff_: " << wbuff_ << std::endl; // debug
-		std::cout << "Http Response is not created yet, let's create!!" << std::endl; // debug
-	}
+
+	// todo write socket する前に header は欲しいと思う
 
 	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(1024));
 	std::memcpy(buff, wbuff_.data(), copy_len);
@@ -229,7 +224,7 @@ bool Connection::writeSocket()
 		delete request_;
 		response_ = NULL;
 		request_ = NULL;
-		std::cout << "http process is done, delete current request and response" << std::endl;
+		std::cout << "[connection] http process is done, delete current request and response" << std::endl;
 		is_response_end = true;
 	}
 	return is_response_end;

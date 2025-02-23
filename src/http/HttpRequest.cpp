@@ -62,7 +62,7 @@ std::string HttpRequest::getLocationPath() const
 	return location_path_;
 }
 
-METHOD HttpRequest::getMethod() const
+Method HttpRequest::getMethod() const
 {
 	std::string method = start_line_[0];
 	if(method == "GET")
@@ -71,10 +71,7 @@ METHOD HttpRequest::getMethod() const
 		return POST;
 	else if(method == "DELETE")
 		return DELETE;
-	else if(method == "PUT")
-		return PUT;
-	else if(method == "HEAD")
-		return HEAD;
+	return UNKNOWN;
 }
 
 // ==================================== setter ====================================
@@ -114,7 +111,7 @@ std::map<std::string, std::string> HttpRequest::parseRequestHeader(
 			if (line[i] == '\r' || line[i] == '\n') {
 				count++;
 			}
-			i++;
+			// i++; これいるかわからない
 		}
 		line = line.substr(0, line.size() - count);
 		std::string key = line.substr(0, line.find(":"));

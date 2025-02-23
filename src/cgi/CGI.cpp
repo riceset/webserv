@@ -8,21 +8,26 @@ CGI::CGI(std::string path)
 {
 	int pipe_fd[2];
 
+	(void)path;
+
 	_pid = fork();
 	if (_pid == 0)
 	{
+		const char *php = "/usr/bin/php";
+		const char *script = "/home/atokamot/git-cursus/webserv/www/index.php";
+		char *const args[] = { (char *)php, (char *)script, NULL };
+		char *const envp[] = { NULL };
+
 		close(pipe_fd[0]);
 		dup2(pipe_fd[1], 1);
 		close(pipe_fd[1]);
-		execve(path.c_str(), NULL, NULL); //テスト用だな
-		perror("execve");
+		execve(php, args, envp);
 	}
 	else
 	{
 		close(pipe_fd[1]);
 		_fd = pipe_fd[0];
 	}
-
 }
 
 CGI::CGI(const CGI &cgi)
@@ -55,5 +60,4 @@ int CGI::getFd() const
 void CGI::killCGI()
 {
 	kill(_pid, SIGKILL);
-	close(_fd);
 }

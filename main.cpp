@@ -37,7 +37,7 @@ enum FileStatus
 	NOT_COMPLETED,
 };
 
-FileStatus readStaticFile(Connection &conn, int fd)
+FileStatus readStaticFile(Connection &conn)
 {
 	char buff[1024];
 	ssize_t rlen = read(conn.getStaticFd(), buff, 1024);
@@ -59,7 +59,7 @@ FileStatus readStaticFile(Connection &conn, int fd)
 }
 
 // todo header は CGI で作成する
-FileStatus readPipe(Connection &conn, int fd)
+FileStatus readPipe(Connection &conn)
 {
 	char buff[1024];
 	CGI cgi;
@@ -92,9 +92,11 @@ void afterReadSocket(Connection &conn, MainConf *mainConf, EpollWrapper &epollWr
 	HttpRequest *request = conn.getRequest();
 	HttpResponse *response = conn.getResponse();
 
+	int new_fd;
+
 	if (response->getStatusCode() != 200)
 	{
-		int new_fd = conn.setErrorFd();
+		new_fd = conn.setErrorFd();
 		epollWrapper.addEvent(new_fd);
 		return;
 	}
@@ -102,7 +104,7 @@ void afterReadSocket(Connection &conn, MainConf *mainConf, EpollWrapper &epollWr
 	switch (request->getMethod())
 	{
 	case GET:
-		int new_fd = conn.setReadFd(); // dynamic file or static file
+		new_fd = conn.setReadFd(); // dynamic file or static file
 		epollWrapper.addEvent(new_fd);
 		return;
 	case POST:
@@ -229,8 +231,8 @@ int main()
 				FileStatus file_status;
 				switch (type) {
 					// todo エラーハンドリングを行う
-					case FileTypes::STATIC:
-						file_status = readStaticFile(*conn, target_fd);
+					case STATIC:
+						file_status = readStaticFile(*conn);
 						if (file_status == ERROR)
 						{
 							epollWrapper.deleteEvent(conn->getFd());
@@ -247,8 +249,8 @@ int main()
 							std::cout << "[main.cpp] static file closed" << std::endl;
 						}
 						break;
-					case FileTypes::PIPE:
-						file_status = readPipe(*conn, target_fd);
+					case PIPE:
+						file_status = readPipe(*conn);
 						if (file_status == ERROR)
 						{
 							epollWrapper.deleteEvent(conn->getFd());
@@ -265,7 +267,7 @@ int main()
 							std::cout << "[main.cpp] dynamic file closed" << std::endl;
 						}
 						break;
-					case FileTypes::SOCKET:
+					case SOCKET:
 						if (current_event.events & EPOLLIN)
 						{
 							file_status = readSocket(*conn);

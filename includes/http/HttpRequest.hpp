@@ -30,16 +30,12 @@
 #include "MainConf.hpp"
 
 // enum
-enum METHOD
+enum Method
 {
 	GET,
 	POST,
 	DELETE,
-	PUT,
-	HEAD,
-	OPTIONS,
-	TRACE,
-	CONNECT,
+	UNKNOWN
 };
 
 class HttpRequest : public AHttp
@@ -68,7 +64,7 @@ public:
 	std::map<std::string, std::string> getHeader() const;
 	std::string getBody() const;
 	std::string getLocationPath() const;
-	METHOD getMethod() const;
+	Method getMethod() const;
 
 	// checker
 	bool isValidHttpVersion();
