@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/23 02:08:07 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/24 11:40:22 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,9 @@ std::string HttpResponse::checkContentType(std::string request_path, conf_value_
 		content_type = "text/html";
 	else if (extension == "json")
 		content_type = "application/json";
+	
+	content_type = "text/html"; // テスト用
+
 	return content_type;
 }
 
@@ -116,9 +119,8 @@ void HttpResponse::processResponseHeader(std::map<std::string, std::string> requ
 	headers_["Content-Language"] = requestHeader["Accept-Language"];
 	headers_["Keep-Alive"] = "timeout=5, max=100";
 	headers_["Connection"] = requestHeader["Connection"];
-	std::size_t body_length = body_.size();
 	std::ostringstream ss;
-	ss << body_length;
+	ss << body_.size();
 	headers_["Content-Length"] = ss.str();
 }
 
@@ -140,6 +142,11 @@ std::string HttpResponse::setDate()
 						   date_vec[1] + " " + date_vec[4] + " " + date_vec[3] +
 						   " GMT";
 	return date_str;
+}
+
+void HttpResponse::setBody(std::string buff)
+{
+	body_ = buff;
 }
 
 /* Set the body of the response */

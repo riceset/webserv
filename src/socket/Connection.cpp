@@ -6,13 +6,13 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/23 02:34:16 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/24 12:13:10 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Connection.hpp"
 
-std::time_t Connection::timeout_ = 60;
+std::time_t Connection::timeout_ = 1000;
 
 // ==================================== constructor and destructor ====================================
 
@@ -31,6 +31,9 @@ Connection::Connection(int listenerFd) : ASocket()
 	response_ = NULL;
 	lastActive_ = std::time(NULL);
 	std::cout << "[connection] Accepted connection from sin_port = " << addr_.sin_port << std::endl;
+
+	cgi_ = CGI();
+	static_fd_ = -1;
 }
 
 Connection::Connection(const Connection &other) : ASocket(other)
@@ -101,7 +104,7 @@ FileTypes Connection::getFdType(int fd) const
 // ==================================== setter ====================================
 
 // readした後にparseして fdを返却する
-int Connection::setReadFd()
+void Connection::setReadFd()
 {
 	std::string location_path = request_->getLocationPath();
 	int path_size = location_path.size();	
@@ -113,19 +116,20 @@ int Connection::setReadFd()
 		// ! エラーハンドリング
 		cgi_ = cgi;
 		fd = cgi.getFd();
-		return fd;
+		return;
 	} else {
 		fd = open(location_path.c_str(), O_RDONLY);
-		fd_ = fd;
+		static_fd_ = fd;
 		// ! エラーハンドリング
-		return fd;	
+		return;	
 	}
 }
 
-int Connection::setErrorFd()
+void Connection::setErrorFd()
 {
 	// std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
-	std::string error_page = "/home/atokamot/git-cursus/webserv/www/404.html"; // テスト用
+	// std::string error_page = "/home/atokamot/git-cursus/webserv/www/404.html"; // ubuntu テスト用
+	std::string error_page = "/Users/atsu/webserv/webserv/www/404.html"; // mac テスト用
 
 	std::cout << "[connection] error_page: " << error_page << " is set" << std::endl;
 	int fd = open(error_page.c_str(), O_RDONLY);
@@ -133,19 +137,21 @@ int Connection::setErrorFd()
 	if (fd == -1)
 	{
 		std::cerr << "[connection] open failed" << std::endl;
-		return -1;
+		throw std::runtime_error("[connection] open failed");
 	}
-	error_fd_ = fd;
+	static_fd_ = fd;
 
-	return fd;
+	return ;
 }
 
 void Connection::buildResponseString()
 {
 	std::string startLine = vecToString(response_->getStartLine());
 	std::string header = mapToString(response_->getHeader());
-	std::string body = response_->getBody(); // body 部分は他で生成されると言う認識
-	wbuff_ = startLine + "\r\n" + header + "\r\n" + wbuff_;
+	std::string body = response_->getBody();
+	wbuff_ = startLine + "\r\n" + header + "\r\n" + body;
+
+	std::cout << "[connection] response string is built" << std::endl;
 }
 
 void Connection::setWbuff(std::string wbuff)
@@ -168,10 +174,45 @@ void Connection::setHttpRequest(MainConf *mainConf)
 void Connection::setHttpResponse()
 {
 	response_ = new HttpResponse();
+}
+
+void Connection::setHttpResponseHeader()
+{
 	response_->processResponseStartLine(request_->getStartLine(), conf_value_);
 	response_->processResponseHeader(request_->getHeader(), conf_value_, request_->getLocationPath());
-	// body は後で処理する
-	std::cout << "[connection] response is set (tmp header is set)" << std::endl;
+	std::cout << "[connection] response header & start line is set" << std::endl;
+}
+
+void Connection::setHttpResponseBody()
+{
+	if (static_file_buff_.empty())
+	{
+		response_->setBody(wbuff_);
+	}
+	else
+	{
+		response_->setBody(static_file_buff_);
+	}
+	std::cout << "[connection] response body is set" << std::endl;
+}
+
+void Connection::setStaticFd(int fd)
+{
+	static_fd_ = fd;
+}
+
+void Connection::clearValue()
+{
+	// clear cgi
+	rbuff_.clear();
+	wbuff_.clear();
+	static_file_buff_.clear();
+	delete request_;
+	delete response_;
+	request_ = NULL;
+	response_ = NULL;
+	lastActive_ = 0;
+	timeout_ = 0;
 }
 
 // ==================================== check ==============================================
@@ -221,13 +262,14 @@ bool Connection::writeSocket()
 
 	// todo write socket する前に header は欲しいと思う
 
+	std::cout << wbuff_ << std::endl;
+
 	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(1024));
 	std::memcpy(buff, wbuff_.data(), copy_len);
 	if (copy_len != 1024)
 		buff[copy_len] = '\0';
 	wbuff_.erase(0, copy_len);
 	ssize_t wlen = send(fd_, buff, copy_len, 0);
-	std::cout << "wlen: " << wlen << std::endl; // debug
 	if (wlen == -1)
 			throw std::runtime_error("send failed");
 	if (wlen < 1024) {
@@ -235,7 +277,10 @@ bool Connection::writeSocket()
 		delete request_;
 		response_ = NULL;
 		request_ = NULL;
-		std::cout << "[connection] http process is done, delete current request and response" << std::endl;
+		if (wlen == 0)
+			std::cout << "[connection] write socket closed by client" << std::endl;
+		else
+			std::cout << "[connection] write socket completed" << std::endl;
 		is_response_end = true;
 	}
 	return is_response_end;

@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 22:49:57 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/22 16:05:35 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/23 14:52:20 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ public:
 	~ConnectionWrapper();
 
 	// getter
+	std::vector<Connection *> getConnections() const;
 	Connection *getConnection(int fd) const;
 
 	// setter

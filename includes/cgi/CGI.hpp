@@ -3,8 +3,9 @@
 
 #include <string>
 #include <unistd.h>
-
 #include <signal.h> 
+
+#include <iostream>
 
 class CGI
 {

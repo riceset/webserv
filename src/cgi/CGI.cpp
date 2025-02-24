@@ -10,6 +10,12 @@ CGI::CGI(std::string path)
 
 	(void)path;
 
+	if (pipe(pipe_fd) == -1)
+	{
+		std::cout << "[cgi] pipe failed" << std::endl;
+		throw std::runtime_error("[cgi] pipe failed");
+	}
+
 	_pid = fork();
 	if (_pid == 0)
 	{

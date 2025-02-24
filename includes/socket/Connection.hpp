@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/23 02:08:31 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/24 12:05:50 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ private:
 	// file
 	CGI cgi_; // dynamic file
 	int static_fd_; // static file
-	int error_fd_;  // error page file
 
 	// buffer
 	std::string rbuff_;
@@ -90,11 +89,15 @@ public:
 	// setter
 	void buildResponseString();
 	void setWbuff(std::string wbuff);
-	int setReadFd();
-	int setErrorFd();
+	void setReadFd();
+	void setErrorFd();
 	void setStaticBuff(std::string static_buff);
 	void setHttpRequest(MainConf *mainConf);
 	void setHttpResponse();
+	void setHttpResponseHeader();
+	void setHttpResponseBody();
+	void setStaticFd(int fd);
+	void clearValue();
 
 	// read and write
 	bool readSocket();

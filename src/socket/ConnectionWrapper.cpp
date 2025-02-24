@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 22:49:41 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/22 19:49:01 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/23 14:55:58 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,11 @@
 
 #include "Connection.hpp"
 
-ConnectionWrapper::ConnectionWrapper() {}
+ConnectionWrapper::ConnectionWrapper()
+{
+	connections_.clear();
+	connections_ = std::vector<Connection *>();
+}
 
 ConnectionWrapper::~ConnectionWrapper()
 {
@@ -26,6 +30,11 @@ ConnectionWrapper::~ConnectionWrapper()
 		delete connections_[i];
 		i++;
 	}
+}
+
+std::vector<Connection *> ConnectionWrapper::getConnections() const
+{
+	return connections_;
 }
 
 /* Get the connection with the given file descriptor */
