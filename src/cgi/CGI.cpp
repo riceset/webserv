@@ -6,9 +6,9 @@ CGI::CGI() : _fd(-1), _path("")
 
 CGI::CGI(std::string path)
 {
+	std::cout << "[cgi] cgi has called with path: " << path << std::endl;
+	int status;
 	int pipe_fd[2];
-
-	(void)path;
 
 	if (pipe(pipe_fd) == -1)
 	{
@@ -17,23 +17,36 @@ CGI::CGI(std::string path)
 	}
 
 	_pid = fork();
+	if (_pid == -1)
+	{
+		std::cout << "[cgi] fork failed" << std::endl;
+		throw std::runtime_error("[cgi] fork failed");
+	}
 	if (_pid == 0)
 	{
 		const char *php = "/usr/bin/php";
-		const char *script = "/home/atokamot/git-cursus/webserv/www/index.php";
+		const char *script = path.c_str();
 		char *const args[] = { (char *)php, (char *)script, NULL };
 		char *const envp[] = { NULL };
 
 		close(pipe_fd[0]);
-		dup2(pipe_fd[1], 1);
+		dup2(pipe_fd[1], STDOUT_FILENO);
 		close(pipe_fd[1]);
 		execve(php, args, envp);
 	}
 	else
 	{
 		close(pipe_fd[1]);
+		int flags = fcntl(pipe_fd[0], F_GETFL, 0);
+		if (flags == -1) {
+			std::cout << "[cgi] fcntl failed on pipe_fd[0]" << std::endl;
+			throw std::runtime_error("[cgi] fcntl failed");
+		}
+		fcntl(pipe_fd[0], F_SETFL, flags | O_NONBLOCK);
 		_fd = pipe_fd[0];
 	}
+
+	waitpid(_pid, &status, 0);
 }
 
 CGI::CGI(const CGI &cgi)
