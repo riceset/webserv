@@ -138,39 +138,38 @@ void afterReadSocket(Connection &conn, MainConf *mainConf, EpollWrapper &epollWr
 		return;
 	}
 
-	CGI * newCGI = new CGI("./www/index.php");
-	conn.setCGI(newCGI);
-	int new_fd = newCGI->getFd();
-	epollWrapper.addEvent(new_fd);
+	Method method = request->getMethod();
+	int new_fd = -1;
 
-// 	switch (request->getMethod())
-// 	{
-// 	case GET: // todo 静的ファイルは読み込み完了後に header を付与する
-// // ================================================================================================
-// 		CGI cgi("./www/index.php");
-// 		new_fd = cgi.getFd();
-// // ================================================================================================
-// 		// conn.setReadFd();
-// 		// if (conn.getCGI().getFd() != -1)
-// 		// {
-// 		// 	new_fd = conn.getCGI().getFd();
-// 		// 	std::cout << "[main.cpp] cgi fd = " << new_fd << std::endl;
-// 		// 	epollWrapper.addEvent(new_fd);
-// 		// }
-// 		epollWrapper.addEvent(new_fd);
-
-// 		return;
-// 	case POST:
-// 		conn.setHttpResponse(); // todo ここで response を作成する body 不要?
-// 		// todo POSTの処理
-// 		return;
-// 	case DELETE:
-// 		conn.setHttpResponse(); // todo ここで response を作成する body 不要
-// 		// todo DELETEの処理
-// 		return;
-// 	default:
-// 		return;
-// 	}
+	// todo 静的ファイルは読み込み完了後に header を付与する
+	if (method == GET)
+	{
+		conn.setReadFd();
+		if (conn.getCGI() != NULL)
+		{
+			CGI * newCGI = new CGI("./www/index.php");
+			conn.setCGI(newCGI);
+			new_fd = newCGI->getFd();
+		}
+		else
+		{
+			new_fd = conn.getStaticFd();
+		}
+		epollWrapper.addEvent(new_fd);
+		return;
+	}
+	if (method == POST)
+	{
+		conn.setHttpResponse();
+		// todo POSTの処理
+		return;
+	}
+	if (method == DELETE)
+	{
+		conn.setHttpResponse();
+		// todo DELETEの処理
+		return;
+	}
 }
 
 FileStatus readSocket(Connection &conn) {

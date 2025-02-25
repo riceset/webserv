@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 09:55:33 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 10:17:42 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,14 +117,6 @@ void Connection::setReadFd()
 	if (path_size > 4 && location_path.substr(path_size - 4, 4) == ".php") {
 		CGI *cgi = new CGI(location_path);
 		// ! エラーハンドリング
-		
-		// テスト用
-		char buff[1024];
-		int fd = cgi->getFd();
-		std::cout << "[connection] cgi fd = " << fd << std::endl;
-		int r = read(fd, buff, 100);
-		buff[r] = '\0';
-		std::cout << "[connection] read size = " << r << " read: " << buff << std::endl;
 
 		cgi_ = cgi;
 		return;
