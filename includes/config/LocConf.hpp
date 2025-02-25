@@ -1,7 +1,7 @@
 #pragma once
+#include <cstring>
 #include <iostream>
 #include <map>
-#include <cstring>
 
 #include "BaseConf.hpp"
 
@@ -41,7 +41,7 @@ public:
 	std::string get_path();
 
 	// get conf_value_t
-	void get_conf_value(std::string path, conf_value_t &conf_value);
+	void getConfValue(std::string path, conf_value_t &conf_value);
 
 	// debug
 	void debug_print();

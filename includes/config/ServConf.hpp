@@ -39,7 +39,7 @@ public:
 	std::string get_server_name();
 
 	// get conf_value_t
-	conf_value_t get_conf_value(std::string path);
+	conf_value_t getConfValue(std::string path);
 
 	// debug
 	void debug_print();

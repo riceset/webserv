@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 09:41:46 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 11:07:48by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,16 @@ enum FileTypes
 	SOCKET,
 };
 
+enum FileStatus
+{
+	SUCCESS,
+	SUCCESS_CGI,
+	SUCCESS_STATIC,
+	ERROR,
+	NOT_COMPLETED,
+	CLOSED,
+};
+
 class Connection : public ASocket
 {
 private:
@@ -52,9 +62,8 @@ private:
 	int static_fd_; // static file
 
 	// buffer
-	std::string rbuff_;
+	std::string rbuff_; // 2ついるのか？
 	std::string wbuff_;
-	std::string static_file_buff_;
 
 	// request and response
 	HttpRequest *request_;
@@ -74,35 +83,28 @@ public:
 
 	// check timeout
 	bool isTimedOut();
-	bool findError(MainConf &mainConf);
 
 	// getter
 	int getFd() const;
 	int getStaticFd() const;
 	CGI *getCGI() const;
-	std::string getRbuff() const;
-	std::string getWbuff() const;
-	HttpRequest *getRequest() const;
-	HttpResponse *getResponse() const;
 	FileTypes getFdType(int fd) const;
 
 	// setter
-	void buildResponseString();
-	void setWbuff(std::string wbuff);
 	void setReadFd();
 	void setErrorFd();
-	void setStaticBuff(std::string static_buff);
 	void setHttpRequest(MainConf *mainConf);
 	void setHttpResponse();
-	void setHttpResponseHeader();
-	void setHttpResponseBody();
-	void setStaticFd(int fd);
-	void setCGI(CGI *cgi);
 	void clearValue();
+	// (setter) http response wrapper
+	void buildStaticFileResponse();
 
-	// read and write
-	bool readSocket();
-	bool writeSocket();
+	// method static も 動的もここに位置する可能性あり
+	FileStatus readSocket(MainConf *mainConf);
+	FileStatus writeSocket();
+	FileStatus readStaticFile();
+	FileStatus readCGI();
+	void cleanUp();
 };
 
 /* Connection *getConnection(std::vector<Connection *> &connections, int fd); */

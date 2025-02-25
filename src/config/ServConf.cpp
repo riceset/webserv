@@ -172,7 +172,8 @@ LocConf select_location(std::string path, std::vector<LocConf> locations)
 		// /hoge/fuga と /hoge がある場合、/hoge/fuga が優先される
 		loc_path = locations[i].get_path();
 
-		if((max_len < path.size()) && std::strncmp(loc_path.c_str(), path.c_str(), loc_path.size()) == 0)
+		if((max_len < path.size()) &&
+		   std::strncmp(loc_path.c_str(), path.c_str(), loc_path.size()) == 0)
 		{
 			max_len = loc_path.size();
 			locConf = locations[i];
@@ -187,7 +188,7 @@ LocConf select_location(std::string path, std::vector<LocConf> locations)
 	return locConf;
 }
 
-conf_value_t ServConf::get_conf_value(std::string path)
+conf_value_t ServConf::getConfValue(std::string path)
 {
 	conf_value_t conf_value;
 	LocConf locConf;
@@ -206,7 +207,7 @@ conf_value_t ServConf::get_conf_value(std::string path)
 		throw std::runtime_error("[server] location not found");
 	}
 
-	locConf.get_conf_value(path, conf_value);
+	locConf.getConfValue(path, conf_value);
 	return conf_value;
 }
 

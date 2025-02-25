@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 10:17:42 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:27:10 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,12 +38,13 @@ Connection::Connection(int listenerFd) : ASocket()
 
 Connection::Connection(const Connection &other) : ASocket(other)
 {
+	if (this == &other)
+		return ;
 	fd_ = other.fd_;
 	static_fd_ = other.static_fd_;
 	cgi_ = other.cgi_;
 	rbuff_ = other.rbuff_;
 	wbuff_ = other.wbuff_;
-	static_file_buff_ = other.static_file_buff_;
 	request_ = other.request_;
 	response_ = other.response_;
 	lastActive_ = other.lastActive_;
@@ -68,31 +69,8 @@ int Connection::getStaticFd() const
 
 CGI *Connection::getCGI() const
 {
-	if (cgi_ == NULL)
-		return NULL;
 	return cgi_;
 }
-
-std::string Connection::getRbuff() const
-{
-	return rbuff_;
-}
-
-std::string Connection::getWbuff() const
-{
-	return wbuff_;
-}
-
-HttpRequest *Connection::getRequest() const
-{
-	return request_;
-}
-
-HttpResponse *Connection::getResponse() const
-{
-	return response_;
-}
-
 FileTypes Connection::getFdType(int fd) const
 {
 	if (fd == static_fd_)
@@ -105,43 +83,46 @@ FileTypes Connection::getFdType(int fd) const
 
 // ==================================== setter ====================================
 
-// readした後にparseして fdを返却する
 void Connection::setReadFd()
 {
 	std::string location_path = request_->getLocationPath();
 	int path_size = location_path.size();
 	int fd;
 
-	std::cout << "[connection] location_path: " << location_path << std::endl;
 	// cgiかどうか
 	if (path_size > 4 && location_path.substr(path_size - 4, 4) == ".php") {
 		CGI *cgi = new CGI(location_path);
 		// ! エラーハンドリング
 
 		cgi_ = cgi;
+		std::cout << "[connection] cgi is set" << std::endl;
 		return;
 	} else {
 		fd = open(location_path.c_str(), O_RDONLY);
-		// ! エラーハンドリング
 		if (fd == -1)
 		{
 			std::cerr << "[connection] open failed" << std::endl;
 			throw std::runtime_error("[connection] open failed");
 		}
 		static_fd_ = fd;
+		std::cout << "[connection] static_fd is set" << std::endl;
 		return;	
 	}
 }
 
 void Connection::setErrorFd()
 {
-	// std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
-	// std::string error_page = "/home/atokamot/git-cursus/webserv/www/404.html"; // ubuntu テスト用
-	std::string error_page = "/Users/atsu/webserv/webserv/www/404.html"; // mac テスト用
+	std::cout << "conf path : " << conf_value_._path << std::endl;
+
+	if (conf_value_._error_page.empty())
+	{
+		std::cerr << "[connection] error_page is not set" << std::endl;
+		throw std::runtime_error("[connection] error_page is not set");
+	}
+	std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
 
 	std::cout << "[connection] error_page: " << error_page << " is set" << std::endl;
 	int fd = open(error_page.c_str(), O_RDONLY);
-	// ! エラーハンドリング
 	if (fd == -1)
 	{
 		std::cerr << "[connection] open failed" << std::endl;
@@ -152,30 +133,25 @@ void Connection::setErrorFd()
 	return ;
 }
 
-void Connection::buildResponseString()
+void Connection::buildStaticFileResponse()
 {
-	std::string startLine = vecToString(response_->getStartLine());
-	std::string header = mapToString(response_->getHeader());
-	std::string body = response_->getBody();
-	wbuff_ = startLine + "\r\n" + header + "\r\n" + body;
+	std::map<std::string, std::string> r_header = request_->getHeader();
+	std::string path = request_->getLocationPath();
+	std::string server_name = request_->getServerName();
 
-	std::cout << "[connection] response string is built" << std::endl;
-}
+	response_ = new HttpResponse();
+	response_->setBody(wbuff_); // content length 格納のためにまずは body をセット
+	response_->setStartLine(200); // status code は request 段階で確定
+	response_->setHeader(r_header, path, server_name);
 
-void Connection::setWbuff(std::string wbuff)
-{
-	wbuff_ += wbuff;
-}
-
-void Connection::setStaticBuff(std::string static_buff)
-{
-	static_file_buff_ += static_buff;
+	wbuff_ = response_->buildResponse();
+	std::cout << "[connection] response build" << std::endl;
 }
 
 void Connection::setHttpRequest(MainConf *mainConf)
 {
-
 	request_ = new HttpRequest(rbuff_, mainConf);
+	conf_value_ = mainConf->getConfValue(request_->getPort(), request_->getServerName(), request_->getRequestPath());
 	std::cout << "[connection] request is set" << std::endl;
 	// std::cout << rbuff_ << std::endl;
 }
@@ -185,44 +161,12 @@ void Connection::setHttpResponse()
 	response_ = new HttpResponse();
 }
 
-void Connection::setHttpResponseHeader()
-{
-	response_->processResponseStartLine(request_->getStartLine(), conf_value_);
-	response_->processResponseHeader(request_->getHeader(), conf_value_, request_->getLocationPath());
-	std::cout << "[connection] response header & start line is set" << std::endl;
-}
-
-void Connection::setHttpResponseBody()
-{
-	if (static_file_buff_.empty())
-	{
-		std::cout << "[connection] wbuff_ is set to body" << std::endl;
-		response_->setBody(wbuff_);
-	}
-	else
-	{
-		std::cout << "[connection] static_file_buff_ is set to body" << std::endl;
-		response_->setBody(static_file_buff_);
-	}
-	std::cout << "[connection] response body is set" << std::endl;
-}
-
-void Connection::setStaticFd(int fd)
-{
-	static_fd_ = fd;
-}
-
-void Connection::setCGI(CGI *cgi)
-{
-	cgi_ = cgi;
-}
 
 void Connection::clearValue()
 {
 	// clear cgi
 	rbuff_.clear();
 	wbuff_.clear();
-	static_file_buff_.clear();
 	delete request_;
 	delete response_;
 	request_ = NULL;
@@ -245,40 +189,154 @@ bool Connection::isTimedOut()
 
 // ==================================== read and write ====================================
 
-bool Connection::readSocket()
+FileStatus Connection::readSocket(MainConf *mainConf)
 {
 	char buff[1024];
-	ssize_t rlen = recv(fd_, buff, sizeof(buff) - 1, 0);
-	bool is_request_end = false;
+	ssize_t rlen = recv(fd_, buff, 1024, 0);
 
 	if(rlen < 0)
-		throw std::runtime_error("recv failed");
+	{
+		return ERROR;
+	}
 	else if(rlen == 0)
-		throw std::runtime_error("connection is closed by client"); // ? ちょうど読み切った場合は0になるのではないか？
-	else if (rlen < 1023) {
-		buff[rlen] = '\0';
+	{
+		std::cout << "[connection] read socket closed by client" << std::endl;
+		return CLOSED;
+	}
+	else if (rlen == 1024) {
 		rbuff_ += buff;
-		is_request_end = true;
-	} else {
-		rbuff_ += buff;
+		return NOT_COMPLETED;
 	}
 
-	return is_request_end;
+	// rlen < 1023 読み切った後の処理
+	buff[rlen] = '\0';
+	rbuff_ += buff;
+
+	// todo ここからは関数を分割するべきかも
+
+	setHttpRequest(mainConf);
+	setHttpResponse();
+
+	// エラーハンドリング
+	if (!request_->isValidRequest())
+	{
+		// error 400, 404, 405, 414, 505 はこの段階で確定する
+		// responose_->setResponseStartLine("status code"); 前もって登録をしておく
+		// もしも error page を読み込むなら、下のgetの処理と同様に
+		// bodyを必要としないなら、headerを作成して write　の処理を呼び出
+		setErrorFd(); // 404 決め打ち テスト用
+
+		return SUCCESS_STATIC;
+	}
+
+	Method method = request_->getMethod();
+	if (method == GET)
+	{
+		setReadFd();
+		// todo pipeの時にはcgiをセットして、writeを許可する
+		if (cgi_ != NULL)
+			return SUCCESS_CGI;
+		return SUCCESS_STATIC;
+	}
+	else if (method == POST)
+	{
+		// todo
+	}
+	else if (method == DELETE)
+	{
+		// todo
+	}
+	else
+	{
+		// todo
+	}
+	
+	return SUCCESS;
 }
 
-bool Connection::writeSocket()
+FileStatus Connection::readStaticFile()
 {
 	char buff[1024];
-	bool is_response_end = false;
+	ssize_t rlen = read(static_fd_, buff, 1024);
+
+	if(rlen < 0)
+	{
+		close(static_fd_);
+		static_fd_ = -1;
+		return ERROR;
+	}
+	else if(rlen == 0)
+	{
+		close(static_fd_);
+		static_fd_ = -1;
+		return SUCCESS;
+	}
+	else if (rlen == 1024) {
+		wbuff_ += buff; // todo wbuffでいいのか？
+		return NOT_COMPLETED;
+	}
+
+	// rlen < 1024 読み切った後の処理
+	buff[rlen] = '\0';
+	wbuff_ += buff;
+
+	buildStaticFileResponse();
+
+	close(static_fd_);
+	static_fd_ = -1;
+
+	return SUCCESS;
+	// todo mainに戻ってepollにwriteを許可する必要あり
+}
+
+FileStatus Connection::readCGI()
+{
+	char buff[1024];
+	ssize_t rlen = read(cgi_->getFd(), buff, sizeof(buff) - 1);
+
+	if(rlen < 0)
+	{
+		std::cerr << "[connection] read pipe failed" << std::endl;
+		cgi_->killCGI();
+		close(cgi_->getFd());
+		delete cgi_;
+		cgi_ = NULL;
+		return ERROR;
+	}
+	else if (rlen == 1023) {
+		wbuff_ += buff;
+		return NOT_COMPLETED;
+	}
+
+	// rlen < 1023 読み切った後の処理
+	buff[rlen] = '\0';
+	wbuff_ += buff;
+	// todo chunked の場合はここで処理を行う
+	// wbuff_ += "0\r\n\r\n";
+
+	close(cgi_->getFd());
+	delete cgi_;
+	cgi_ = NULL;
+
+	return SUCCESS;
+}
+
+FileStatus Connection::writeSocket()
+{
+	char buff[1024];
 
 	if(!request_)
 	{
-		throw std::runtime_error("No request found"); // todo この例外は未対応
+		std::cerr << "[connection] No request found" << std::endl;
+		return ERROR;
 	}
 
-	// todo write socket する前に header は欲しいと思う
+	if (wbuff_.empty())
+	{
+		return NOT_COMPLETED;
+	}
 
-	std::cout << wbuff_ << std::endl;
+	std::cout << wbuff_ << std::endl; // デバッグ用
 
 	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(1024));
 	std::memcpy(buff, wbuff_.data(), copy_len);
@@ -287,19 +345,32 @@ bool Connection::writeSocket()
 	wbuff_.erase(0, copy_len);
 	ssize_t wlen = send(fd_, buff, copy_len, 0);
 	if (wlen == -1)
-			throw std::runtime_error("send failed");
-	if (wlen < 1024) {
-		delete response_;
-		delete request_;
-		response_ = NULL;
-		request_ = NULL;
-		if (wlen == 0)
-			std::cout << "[connection] write socket closed by client" << std::endl;
-		else
-			std::cout << "[connection] write socket completed" << std::endl;
-		is_response_end = true;
+		return ERROR;
+	if (wlen == 1024)
+		return NOT_COMPLETED;
+	//(wlen < 1024) // 後始末はここでしている
+	delete response_;
+	delete request_;
+	response_ = NULL;
+	request_ = NULL;
+	std::cout << "[connection] write socket completed" << std::endl;
+	// todo cgi かつ chunked の場合は 最後に 0\r\n\r\n を追加する必要がある（対応しなくても良いと思う）
+	return SUCCESS;
+}
+
+void Connection::cleanUp()
+{
+	if (static_fd_ != -1)
+	{
+		close(static_fd_);
+		static_fd_ = -1;
 	}
-	return is_response_end;
+	else if (cgi_ != NULL && cgi_->getFd() != -1)
+	{
+		cgi_->killCGI();
+		delete cgi_;
+		cgi_ = NULL;
+	}
 }
 
 // ==================================== utils ====================================

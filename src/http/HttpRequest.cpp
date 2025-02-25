@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/24 15:47:41 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:27:25 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 #include <string>
 #include <vector>
 
-// ==================================== constructor and destructor ====================================
+// ==================================== constructor and destructor
+// ====================================
 
 HttpRequest::HttpRequest() {}
 
@@ -37,11 +38,11 @@ HttpRequest::HttpRequest(std::string request, MainConf *mainConf)
 	server_name_ = server_and_port.substr(0, pos);
 	port_ = server_and_port.substr(pos + 1);
 	request_path_ = start_line_[1];
-	conf_value_ = mainConf->get_conf_value(port_, server_name_, request_path_);
-	setStatusCode();
+	conf_value_ = mainConf->getConfValue(port_, server_name_, request_path_);
 }
 
-// ==================================== getter ====================================
+// ==================================== getter
+// ====================================
 
 std::vector<std::string> HttpRequest::getStartLine() const
 {
@@ -75,12 +76,23 @@ Method HttpRequest::getMethod() const
 	return UNKNOWN;
 }
 
-int HttpRequest::getStatusCode() const
+std::string HttpRequest::getServerName() const
 {
-	return status_code_;
+	return server_name_;
 }
 
-// ==================================== setter ====================================
+std::string HttpRequest::getPort() const
+{
+	return port_;
+}
+
+std::string HttpRequest::getRequestPath() const
+{
+	return request_path_;
+}
+
+// ==================================== setter
+// ====================================
 
 std::vector<std::string> HttpRequest::parseRequestStartLine(std::string request)
 {
@@ -113,11 +125,12 @@ std::map<std::string, std::string> HttpRequest::parseRequestHeader(
 		std::string line;
 		std::getline(ss, line);
 		int count = 0;
-		for (long unsigned int i = 0; i < line.size(); i++) {
-			if (line[i] == '\r' || line[i] == '\n') {
+		for(long unsigned int i = 0; i < line.size(); i++)
+		{
+			if(line[i] == '\r' || line[i] == '\n')
+			{
 				count++;
 			}
-			// i++; これいるかわからない
 		}
 		line = line.substr(0, line.size() - count);
 		std::string key = line.substr(0, line.find(":"));
@@ -138,86 +151,91 @@ std::string HttpRequest::parseRequestBody(std::string request)
 	return body;
 }
 
-void HttpRequest::setStatusCode() { // request 読みたての段階でわかるエラー
-	if (!isValidHttpVersion())
-	{
-		status_code_ = 505;
-		return ;
-	}
-	if (!isValidHttpMethod())
-	{
-		status_code_ = 405;
-		return ;
-	}
-	if (!isValidPath())
-	{
-		status_code_ = 404;
-		return ;
-	}
-	status_code_ = 200;
-	return ;
-}
+// ==================================== checker
+// ====================================
 
-// ==================================== checker ====================================
-
-// response でパースを行うのが遅いのと、参照するものもすべてリクエスト内にあるのでこちらに移動
+// response
+// でパースを行うのが遅いのと、参照するものもすべてリクエスト内にあるのでこちらに移動
 
 bool HttpRequest::isValidHttpVersion()
 {
 	std::string version = start_line_[2];
-	
-	if (version != "HTTP/1.1")
+
+	if(version != "HTTP/1.1")
 		return false;
 	return true;
 }
 
-/* this process needs to add the process of distinguishing http method */ 
-bool HttpRequest::isValidHttpMethod() {
+/* this process needs to add the process of distinguishing http method */
+bool HttpRequest::isValidHttpMethod()
+{
 	std::string method = start_line_[0];
 	std::vector<std::string> limit_except = conf_value_._limit_except;
 
-	if (std::find(limit_except.begin(), limit_except.end(), method) == limit_except.end()) 
+	if(std::find(limit_except.begin(), limit_except.end(), method) ==
+	   limit_except.end())
 		return false;
 	return true;
 }
 
 // todo location setter が必要（logicがだめ）
-bool HttpRequest::isValidPath() {
+bool HttpRequest::isValidPath()
+{
 	/* in this process, check only the existence of the requested path */
-	/* where error_page exist or not is not checked */ 
+	/* where error_page exist or not is not checked */
 	/* make requested path that is based wevserv root */
 	location_path_ = getLocationPath(request_path_, conf_value_);
-	if (location_path_ == "")
+	if(location_path_ == "")
 		return false;
 	return true;
 }
 
-// ==================================== utils ====================================
+bool HttpRequest::isValidRequest()
+{
+	if(!isValidHttpVersion())
+		return false;
+	if(!isValidHttpMethod())
+		return false;
+	if(!isValidPath())
+		return false;
+	return true;
+}
 
-std::string HttpRequest::getLocationPath(std::string request_path, conf_value_t conf_value) {
+// ==================================== utils
+// ====================================
+
+std::string HttpRequest::getLocationPath(std::string request_path,
+										 conf_value_t conf_value)
+{
 	std::string location_path;
 	struct stat st;
 	/* if request_path is directory, check the existence of index file */
 	std::cout << "[http request] request_path: " << request_path << std::endl;
 	bool is_directory = false;
-	if (request_path[request_path.size() - 1] == '/')
+	if(request_path[request_path.size() - 1] == '/')
 		is_directory = true;
-	if (is_directory) {
-		for (size_t i = 0; i < conf_value._index.size(); i++) {
+	if(is_directory)
+	{
+		for(size_t i = 0; i < conf_value._index.size(); i++)
+		{
 			/* std::cout << "index: " << conf_value._index[i] << std::endl; */
 			std::string index_path = conf_value._index[i];
-			if (index_path[0] == '/')
+			if(index_path[0] == '/')
 				index_path = index_path.substr(1);
 			location_path = "." + conf_value._root + request_path + index_path;
-			std::cout << "[http request] location_path: " << location_path << std::endl;
-			if (stat(location_path.c_str(), &st) == 0)
+			std::cout << "[http request] location_path: " << location_path
+					  << std::endl;
+			if(stat(location_path.c_str(), &st) == 0)
 				return location_path;
 		}
-	} else {
+	}
+	else
+	{
 		location_path = "." + conf_value._root + request_path;
-		std::cout << "[http request] location_path: " << location_path << std::endl;
-		if (stat(location_path.c_str(), &st) == 0)
+		std::cout << "[http request] location_path: " << location_path
+				  << std::endl;
+		if(stat(location_path.c_str(), &st) == 0)
 			return location_path;
 	}
-	return ""; //todo throwの方がいいかも？
+	return ""; // todo throwの方がいいかも？
 }

@@ -230,7 +230,7 @@ LocConf get_location(std::string path, std::vector<LocConf> locations)
 	return locConf;
 }
 
-void LocConf::get_conf_value(std::string path, conf_value_t &conf_value)
+void LocConf::getConfValue(std::string path, conf_value_t &conf_value)
 {
 	if(_limit_except.size() > 0)
 		conf_value._limit_except = _limit_except;
@@ -256,7 +256,7 @@ void LocConf::get_conf_value(std::string path, conf_value_t &conf_value)
 	{
 		if(_locations[i].get_path() == path)
 		{
-			_locations[i].get_conf_value(path, conf_value);
+			_locations[i].getConfValue(path, conf_value);
 		}
 	}
 

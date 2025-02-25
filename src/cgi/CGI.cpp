@@ -29,9 +29,16 @@ CGI::CGI(std::string path)
 		char *const args[] = { (char *)php, (char *)script, NULL };
 		char *const envp[] = { NULL };
 
+
 		close(pipe_fd[0]);
 		dup2(pipe_fd[1], STDOUT_FILENO);
 		close(pipe_fd[1]);
+		std::cout << "HTTP/1.1 200 OK\r\n";
+		std::cout << "Date: Mon, 25 Feb 2025 12:34:56 GMT\r\n";
+		std::cout << "Content-Type: text/html; charset=UTF-8\r\n";
+		std::cout << "Content-Length: 14\r\n";  // Content-Length を指定
+		std::cout << "Connection: keep-alive\r\n";
+		std::cout << "\r\n";
 		execve(php, args, envp);
 	}
 	else

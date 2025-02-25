@@ -68,9 +68,9 @@ void MainConf::handle_server_block(std::vector<std::string> tokens)
 }
 
 // Getter
-conf_value_t MainConf::get_conf_value(std::string port,
-									  std::string server_name,
-									  std::string path)
+conf_value_t MainConf::getConfValue(std::string port,
+									std::string server_name,
+									std::string path)
 {
 	conf_value_t conf_value;
 
@@ -79,7 +79,6 @@ conf_value_t MainConf::get_conf_value(std::string port,
 	if(pos != std::string::npos)
 	{
 		path = path.substr(0, pos + 1);
-		std::cout << "path: " << path << std::endl;
 	}
 
 	for(size_t i = 0; i < _servers.size(); i++)
@@ -88,7 +87,7 @@ conf_value_t MainConf::get_conf_value(std::string port,
 		   _servers[i].get_server_name() == server_name)
 		{
 			/* std::cout << "server found" << std::endl; */
-			conf_value = _servers[i].get_conf_value(path);
+			conf_value = _servers[i].getConfValue(path);
 			conf_value._path = path;
 			return conf_value;
 		}
