@@ -6,15 +6,11 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 22:49:41 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 09:47:09 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:44:09 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConnectionWrapper.hpp"
-
-#include <algorithm>
-
-#include "Connection.hpp"
 
 ConnectionWrapper::ConnectionWrapper()
 {

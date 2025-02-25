@@ -3,24 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Listener.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 10:40:57 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 19:58:21 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/25 17:43:44 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Listener.hpp"
-
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include <iostream>
-#include <stdexcept>
-
-#include "ASocket.hpp"
 
 Listener::Listener() : ASocket() {}
 

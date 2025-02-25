@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 16:40:12 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 16:29:03 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:47:00 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,20 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 #include "AHttp.hpp"
 #include "HttpRequest.hpp"
 #include "MainConf.hpp"
+#include "CGI.hpp"
 
 class HttpResponse : public AHttp
 {
@@ -33,11 +43,6 @@ class HttpResponse : public AHttp
 		HttpResponse();
 		~HttpResponse();
 
-		// error check
-		// bool isValidHttpVersion(std::string version);
-		// bool isValidHttpMethod(std::string method, std::vector<std::string> limit_except);
-		// bool isValidPath(std::string request_path, conf_value_t conf_value);
-
 		// getter
 		std::vector<std::string> getStartLine() const;
 		std::map<std::string, std::string> getHeader() const;
@@ -48,8 +53,6 @@ class HttpResponse : public AHttp
 		void setStartLine(int status_code);
 		void setBody(std::string buff);
 		void setHeader(std::map<std::string, std::string> requestHeader, std::string path, std::string server_name);
-		// void setBody(std::vector<std::string> requestStartLine, conf_value_t conf_value);
-		// void setStartLine(std::vector<std::string> requestStartLine, conf_value_t conf_value);
 
 		std::string buildResponse();
 

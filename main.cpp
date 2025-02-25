@@ -10,25 +10,10 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <sys/epoll.h>
-#include <unistd.h>
-
-#include <algorithm>
-#include <cerrno>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
-#include <map>
-#include <stdexcept>
-#include <string>
-#include <vector>
-#include <fstream>
-
 #include "Connection.hpp"
 #include "ConnectionWrapper.hpp"
 #include "EpollWrapper.hpp"
 #include "Listener.hpp"
-#include "CGI.hpp"
 
 std::string getConfContent() {
 	std::string confPath = "src/config/sample/test.conf";

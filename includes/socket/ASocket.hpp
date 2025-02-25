@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ASocket.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/10 19:27:15 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/13 13:06:18 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/25 17:44:59 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <cstring>
 
 /* this is socket addres structure */
 /* struct sockaddr_in { */

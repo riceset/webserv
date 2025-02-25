@@ -27,7 +27,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #include "ASocket.hpp"
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"

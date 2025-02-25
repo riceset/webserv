@@ -3,16 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   ASocket.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/11 00:33:46 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/13 13:49:12 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/25 17:44:56 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ASocket.hpp"
-
-#include <cstring>
 
 ASocket::ASocket()
 {

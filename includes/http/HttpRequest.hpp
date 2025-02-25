@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:21 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 17:27:50 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:47:38 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,16 +15,15 @@
 
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include <algorithm>
-#include <ctime>
-#include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <ctime>
+#include <fstream>
+#include <stdexcept>
 
 #include "AHttp.hpp"
 #include "MainConf.hpp"

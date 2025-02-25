@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 17:27:10 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:50:21 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -336,7 +336,7 @@ FileStatus Connection::writeSocket()
 		return NOT_COMPLETED;
 	}
 
-	std::cout << wbuff_ << std::endl; // デバッグ用
+	// std::cout << wbuff_ << std::endl; // デバッグ用
 
 	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(1024));
 	std::memcpy(buff, wbuff_.data(), copy_len);

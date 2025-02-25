@@ -6,17 +6,11 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:29:33 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/24 16:18:25 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:48:04 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "EpollWrapper.hpp"
-
-#include <unistd.h>
-#include <cerrno>
-#include <cstring>
-
-#include <stdexcept>
 
 EpollWrapper::EpollWrapper() {}
 

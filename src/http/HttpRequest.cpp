@@ -6,17 +6,11 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 17:27:25 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:47:14 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpRequest.hpp"
-
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <string>
-#include <vector>
 
 // ==================================== constructor and destructor
 // ====================================
