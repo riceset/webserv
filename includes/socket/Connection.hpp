@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:18:35 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/24 12:05:50 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 09:41:46 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ private:
 	Connection();
 
 	// file
-	CGI cgi_; // dynamic file
+	CGI *cgi_; // dynamic file
 	int static_fd_; // static file
 
 	// buffer
@@ -79,7 +79,7 @@ public:
 	// getter
 	int getFd() const;
 	int getStaticFd() const;
-	CGI getCGI() const;
+	CGI *getCGI() const;
 	std::string getRbuff() const;
 	std::string getWbuff() const;
 	HttpRequest *getRequest() const;
@@ -97,6 +97,7 @@ public:
 	void setHttpResponseHeader();
 	void setHttpResponseBody();
 	void setStaticFd(int fd);
+	void setCGI(CGI *cgi);
 	void clearValue();
 
 	// read and write

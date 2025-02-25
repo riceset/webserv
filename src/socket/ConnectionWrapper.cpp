@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 22:49:41 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/23 14:55:58 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 09:47:09 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ Connection *ConnectionWrapper::getConnection(int fd) const
 {
 	for(unsigned int i = 0; i < connections_.size(); i++)
 	{
-		if(connections_[i]->getFd() == fd || connections_[i]->getStaticFd() == fd || connections_[i]->getCGI().getFd() == fd)
+		if(connections_[i]->getFd() == fd || connections_[i]->getStaticFd() == fd || (connections_[i]->getCGI() != NULL && connections_[i]->getCGI()->getFd() == fd))
 			return connections_[i];
 	}
 	return NULL;

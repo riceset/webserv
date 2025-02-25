@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:21 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/23 03:00:45 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/24 13:50:51 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ private:
 	std::string request_path_;
 	std::string location_path_;
 	conf_value_t conf_value_;
+	int status_code_;
 
 	// parse
 	std::vector<std::string> parseRequestStartLine(std::string request);
@@ -59,12 +60,16 @@ public:
 	HttpRequest(std::string request, MainConf *mainConf);
 	~HttpRequest();
 
+	// setter
+	void setStatusCode();
+
 	// getter
 	std::vector<std::string> getStartLine() const;
 	std::map<std::string, std::string> getHeader() const;
 	std::string getBody() const;
 	std::string getLocationPath() const;
 	Method getMethod() const;
+	int getStatusCode() const;
 
 	// checker
 	bool isValidHttpVersion();

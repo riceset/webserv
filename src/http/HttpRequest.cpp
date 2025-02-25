@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/23 03:04:34 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/24 15:47:41 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ HttpRequest::HttpRequest(std::string request, MainConf *mainConf)
 	port_ = server_and_port.substr(pos + 1);
 	request_path_ = start_line_[1];
 	conf_value_ = mainConf->get_conf_value(port_, server_name_, request_path_);
+	setStatusCode();
 }
 
 // ==================================== getter ====================================
@@ -72,6 +73,11 @@ Method HttpRequest::getMethod() const
 	else if(method == "DELETE")
 		return DELETE;
 	return UNKNOWN;
+}
+
+int HttpRequest::getStatusCode() const
+{
+	return status_code_;
 }
 
 // ==================================== setter ====================================
@@ -132,6 +138,26 @@ std::string HttpRequest::parseRequestBody(std::string request)
 	return body;
 }
 
+void HttpRequest::setStatusCode() { // request 読みたての段階でわかるエラー
+	if (!isValidHttpVersion())
+	{
+		status_code_ = 505;
+		return ;
+	}
+	if (!isValidHttpMethod())
+	{
+		status_code_ = 405;
+		return ;
+	}
+	if (!isValidPath())
+	{
+		status_code_ = 404;
+		return ;
+	}
+	status_code_ = 200;
+	return ;
+}
+
 // ==================================== checker ====================================
 
 // response でパースを行うのが遅いのと、参照するものもすべてリクエスト内にあるのでこちらに移動
@@ -155,21 +181,13 @@ bool HttpRequest::isValidHttpMethod() {
 	return true;
 }
 
+// todo location setter が必要（logicがだめ）
 bool HttpRequest::isValidPath() {
 	/* in this process, check only the existence of the requested path */
 	/* where error_page exist or not is not checked */ 
 	/* make requested path that is based wevserv root */
-	if (getLocationPath(request_path_, conf_value_) == "")
-		return false;
-	return true;
-}
-
-bool HttpRequest::isValidRequest() { // request 読みたての段階でわかるエラー
-	if (!isValidHttpVersion())
-		return false;
-	if (!isValidHttpMethod())
-		return false;
-	if (!isValidPath())
+	location_path_ = getLocationPath(request_path_, conf_value_);
+	if (location_path_ == "")
 		return false;
 	return true;
 }
@@ -180,7 +198,7 @@ std::string HttpRequest::getLocationPath(std::string request_path, conf_value_t 
 	std::string location_path;
 	struct stat st;
 	/* if request_path is directory, check the existence of index file */
-	/* std::cout << "request_path: " << request_path << std::endl; */
+	std::cout << "[http request] request_path: " << request_path << std::endl;
 	bool is_directory = false;
 	if (request_path[request_path.size() - 1] == '/')
 		is_directory = true;
@@ -191,15 +209,15 @@ std::string HttpRequest::getLocationPath(std::string request_path, conf_value_t 
 			if (index_path[0] == '/')
 				index_path = index_path.substr(1);
 			location_path = "." + conf_value._root + request_path + index_path;
-			/* std::cout << "location_path: " << location_path << std::endl; */
+			std::cout << "[http request] location_path: " << location_path << std::endl;
 			if (stat(location_path.c_str(), &st) == 0)
 				return location_path;
 		}
 	} else {
 		location_path = "." + conf_value._root + request_path;
-		std::cout << "location_path: " << location_path << std::endl;
+		std::cout << "[http request] location_path: " << location_path << std::endl;
 		if (stat(location_path.c_str(), &st) == 0)
 			return location_path;
 	}
-	return "";
+	return ""; //todo throwの方がいいかも？
 }

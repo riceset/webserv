@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/24 11:40:22 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/24 12:34:15 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,6 +214,8 @@ bool HttpResponse::isValidHttpVersion(std::string version)
 
 /* this process needs to add the process of distinguishing http method */ 
 bool HttpResponse::isValidHttpMethod(std::string method, std::vector<std::string> limit_except) {
+	if (limit_except.empty())
+		return true;
 	if (std::find(limit_except.begin(), limit_except.end(), method) == limit_except.end()) 
 		return false;
 	return true;
@@ -234,7 +236,7 @@ std::string HttpResponse::getLocationPath(std::string request_path, conf_value_t
 	std::string location_path;
 	struct stat st;
 	/* if request_path is directory, check the existence of index file */
-	/* std::cout << "request_path: " << request_path << std::endl; */
+	std::cout << "[http response] request_path: " << request_path << std::endl;
 	bool is_directory = false;
 	if (request_path[request_path.size() - 1] == '/')
 		is_directory = true;
@@ -245,13 +247,13 @@ std::string HttpResponse::getLocationPath(std::string request_path, conf_value_t
 			if (index_path[0] == '/')
 				index_path = index_path.substr(1);
 			location_path = "." + conf_value._root + request_path + index_path;
-			/* std::cout << "location_path: " << location_path << std::endl; */
+			std::cout << "[http response] location_path: " << location_path << std::endl;
 			if (stat(location_path.c_str(), &st) == 0)
 				return location_path;
 		}
 	} else {
 		location_path = "." + conf_value._root + request_path;
-		std::cout << "location_path: " << location_path << std::endl;
+		std::cout << "[http response] location_path: " << location_path << std::endl;
 		if (stat(location_path.c_str(), &st) == 0)
 			return location_path;
 	}

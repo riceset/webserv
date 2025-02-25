@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/24 12:13:10 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 09:55:33 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ Connection::Connection(int listenerFd) : ASocket()
 	lastActive_ = std::time(NULL);
 	std::cout << "[connection] Accepted connection from sin_port = " << addr_.sin_port << std::endl;
 
-	cgi_ = CGI();
+	cgi_ = NULL;
 	static_fd_ = -1;
 }
 
@@ -66,8 +66,10 @@ int Connection::getStaticFd() const
 	return static_fd_;
 }
 
-CGI Connection::getCGI() const
+CGI *Connection::getCGI() const
 {
+	if (cgi_ == NULL)
+		return NULL;
 	return cgi_;
 }
 
@@ -95,7 +97,7 @@ FileTypes Connection::getFdType(int fd) const
 {
 	if (fd == static_fd_)
 		return STATIC;
-	else if (fd == cgi_.getFd())
+	else if (cgi_ != NULL && fd == cgi_->getFd())
 		return PIPE;
 	else
 		return SOCKET;
@@ -107,20 +109,34 @@ FileTypes Connection::getFdType(int fd) const
 void Connection::setReadFd()
 {
 	std::string location_path = request_->getLocationPath();
-	int path_size = location_path.size();	
+	int path_size = location_path.size();
 	int fd;
 
+	std::cout << "[connection] location_path: " << location_path << std::endl;
 	// cgiかどうか
 	if (path_size > 4 && location_path.substr(path_size - 4, 4) == ".php") {
-		CGI cgi(location_path);
+		CGI *cgi = new CGI(location_path);
 		// ! エラーハンドリング
+		
+		// テスト用
+		char buff[1024];
+		int fd = cgi->getFd();
+		std::cout << "[connection] cgi fd = " << fd << std::endl;
+		int r = read(fd, buff, 100);
+		buff[r] = '\0';
+		std::cout << "[connection] read size = " << r << " read: " << buff << std::endl;
+
 		cgi_ = cgi;
-		fd = cgi.getFd();
 		return;
 	} else {
 		fd = open(location_path.c_str(), O_RDONLY);
-		static_fd_ = fd;
 		// ! エラーハンドリング
+		if (fd == -1)
+		{
+			std::cerr << "[connection] open failed" << std::endl;
+			throw std::runtime_error("[connection] open failed");
+		}
+		static_fd_ = fd;
 		return;	
 	}
 }
@@ -166,6 +182,7 @@ void Connection::setStaticBuff(std::string static_buff)
 
 void Connection::setHttpRequest(MainConf *mainConf)
 {
+
 	request_ = new HttpRequest(rbuff_, mainConf);
 	std::cout << "[connection] request is set" << std::endl;
 	// std::cout << rbuff_ << std::endl;
@@ -187,10 +204,12 @@ void Connection::setHttpResponseBody()
 {
 	if (static_file_buff_.empty())
 	{
+		std::cout << "[connection] wbuff_ is set to body" << std::endl;
 		response_->setBody(wbuff_);
 	}
 	else
 	{
+		std::cout << "[connection] static_file_buff_ is set to body" << std::endl;
 		response_->setBody(static_file_buff_);
 	}
 	std::cout << "[connection] response body is set" << std::endl;
@@ -199,6 +218,11 @@ void Connection::setHttpResponseBody()
 void Connection::setStaticFd(int fd)
 {
 	static_fd_ = fd;
+}
+
+void Connection::setCGI(CGI *cgi)
+{
+	cgi_ = cgi;
 }
 
 void Connection::clearValue()

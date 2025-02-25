@@ -3,16 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   EpollWrapper.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:29:33 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 19:56:59 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/24 16:18:25 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "EpollWrapper.hpp"
 
 #include <unistd.h>
+#include <cerrno>
+#include <cstring>
 
 #include <stdexcept>
 
@@ -50,7 +52,7 @@ void EpollWrapper::addEvent(int fd)
 	new_event.events = EPOLLIN;
 	new_event.data.fd = fd;
 	if(epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &new_event) == -1)
-		throw std::runtime_error("Failed to add event to epoll instance");
+		throw std::runtime_error("[epoll wrapper] epoll_ctl failed: " + std::string(strerror(errno)));
 }
 
 /* Delete given file descripter from epoll instance */

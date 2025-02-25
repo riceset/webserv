@@ -54,6 +54,7 @@ FileStatus readStaticFile(Connection &conn)
 	if (rlen < 1024)
 	{
 		std::cout << "[main.cpp] read static file completed" << std::endl;
+		conn.setHttpResponse();       // response の作成
 		conn.setHttpResponseBody();   // body の登録
 		conn.setHttpResponseHeader(); // header と start line の登録
 		conn.buildResponseString();   // wbuff の登録(writeに備える)
@@ -98,14 +99,14 @@ void readStaticFiles(ConnectionWrapper &connections, EpollWrapper  &epollWrapper
 FileStatus readPipe(Connection &conn)
 {
 	char buff[1024];
-	CGI cgi;
+	CGI *cgi;
 
 	cgi = conn.getCGI();
-	ssize_t rlen = read(cgi.getFd(), buff, 1024);
+	ssize_t rlen = read(cgi->getFd(), buff, 1024);
 	if (rlen == -1)
 	{
 		std::cout << "[main.cpp] Error: read pipe failed" << std::endl;
-		cgi.killCGI();
+		cgi->killCGI();
 		std::cout << "[main.cpp] Error: kill cgi" << std::endl;
 		return ERROR;
 	}
@@ -114,7 +115,11 @@ FileStatus readPipe(Connection &conn)
 	if (rlen < 1024)
 	{
 		std::cout << "[main.cpp] read pipe completed" << std::endl;
-		// todo ここで header を付与して　wbuff に格納する respoonse を完全に作成する 本来はcgiで作成 しているため、即座に送信するのが望ましい
+		// todo ここで header を付与して　wbuff に格納する respoonse を完全に作成する 本来はcgiでheaderを作成 しているため、即座に送信するのが望ましい
+		conn.setHttpResponse();       // response の作成
+		conn.setHttpResponseBody();   // body の登録
+		conn.setHttpResponseHeader(); // header と start line の登録
+		conn.buildResponseString();   // wbuff の登録(writeに備える)
 		return SUCCESS;
 	}
 	return NOT_COMPLETED;
@@ -123,41 +128,49 @@ FileStatus readPipe(Connection &conn)
 void afterReadSocket(Connection &conn, MainConf *mainConf, EpollWrapper &epollWrapper)
 {
 	conn.setHttpRequest(mainConf);
-	conn.setHttpResponse();
-	conn.setHttpResponseHeader();
 
 	HttpRequest *request = conn.getRequest();
-	HttpResponse *response = conn.getResponse();
 
-	int new_fd;
-
-	if (response->getStatusCode() != 200)
+	// todo エラーハンドリングがかなりガバガバ
+	if (request->getStatusCode() != 200)
 	{
 		conn.setErrorFd();
 		return;
 	}
 
-	switch (request->getMethod())
-	{
-	case GET: // todo 静的ファイルは読み込み完了後に header を付与する
-		conn.setReadFd();
-		if (conn.getCGI().getFd() != -1)
-		{
-			new_fd = conn.getCGI().getFd();
-			epollWrapper.addEvent(new_fd);
-		}
-		return;
-	case POST:
-		conn.setHttpResponse(); // todo ここで response を作成する error ハンドリングの意味合いが強い
-		// todo POSTの処理
-		return;
-	case DELETE:
-		conn.setHttpResponse(); // todo ここで response を作成する error ハンドリングの意味合いが強い
-		// todo DELETEの処理
-		return;
-	default:
-		return;
-	}
+	CGI * newCGI = new CGI("./www/index.php");
+	conn.setCGI(newCGI);
+	int new_fd = newCGI->getFd();
+	epollWrapper.addEvent(new_fd);
+
+// 	switch (request->getMethod())
+// 	{
+// 	case GET: // todo 静的ファイルは読み込み完了後に header を付与する
+// // ================================================================================================
+// 		CGI cgi("./www/index.php");
+// 		new_fd = cgi.getFd();
+// // ================================================================================================
+// 		// conn.setReadFd();
+// 		// if (conn.getCGI().getFd() != -1)
+// 		// {
+// 		// 	new_fd = conn.getCGI().getFd();
+// 		// 	std::cout << "[main.cpp] cgi fd = " << new_fd << std::endl;
+// 		// 	epollWrapper.addEvent(new_fd);
+// 		// }
+// 		epollWrapper.addEvent(new_fd);
+
+// 		return;
+// 	case POST:
+// 		conn.setHttpResponse(); // todo ここで response を作成する body 不要?
+// 		// todo POSTの処理
+// 		return;
+// 	case DELETE:
+// 		conn.setHttpResponse(); // todo ここで response を作成する body 不要
+// 		// todo DELETEの処理
+// 		return;
+// 	default:
+// 		return;
+// 	}
 }
 
 FileStatus readSocket(Connection &conn) {
@@ -234,7 +247,7 @@ int main()
 
 		for(int i = 0; i < nfds; ++i)
 		{
-			std::cout << std::endl << "[main.cpp] epoll while [" << i << "]" << std::endl;
+			std::cout << std::endl << "[main.cpp] epoll for-loop ===[" << i << "]===" << std::endl;
 
 			struct epoll_event current_event = epollWrapper[i];
 			int target_fd = current_event.data.fd;
@@ -265,11 +278,16 @@ int main()
 				if(conn->isTimedOut())
 				{
 					// todo 503 time out の実装が必要
-					std::cerr << "[main.cpp] Error: Connection timed out" << std::endl;
+					std::cerr << "[main.cpp] Connection timed out" << std::endl;
 					if (conn->getStaticFd() != -1)
+					{
 						close(conn->getStaticFd());
-					else if (conn->getCGI().getFd() != -1)
-						conn->getCGI().killCGI();
+					}
+					else if (conn->getCGI() != NULL && conn->getCGI()->getFd() != -1)
+					{
+						conn->getCGI()->killCGI();
+						conn->setCGI(NULL);
+					}
 					epollWrapper.deleteEvent(target_fd);
 					connections.removeConnection(target_fd);
 					// todo 終了処理はleakが起きると思う
@@ -287,7 +305,7 @@ int main()
 						{
 							epollWrapper.deleteEvent(conn->getFd());
 							close(target_fd);
-							std::cout << "[main.cpp] dynamic file closed" << std::endl;
+							std::cout << "[main.cpp] dynamic(cgi) file closed" << std::endl;
 							close(conn->getFd());
 							std::cout << "[main.cpp] connection closed" << std::endl;
 						}
@@ -296,13 +314,13 @@ int main()
 							epollWrapper.deleteEvent(target_fd);
 							epollWrapper.setEvent(conn->getFd(), EPOLLOUT); //  本来はSUCCESS後ではなく、cgi 開始した後に書き込むべき time out が発生する可能性があるので悩ましい
 							close(target_fd);
-							std::cout << "[main.cpp] dynamic file closed" << std::endl;
+							std::cout << "[main.cpp] dynamic(cgi) file closed" << std::endl;
 						}
 						break;
 					case SOCKET:
 						if (current_event.events & EPOLLIN)
 						{
-							std::cout << "[main.cpp] socket epoll in event" << std::endl;
+							std::cout << "[main.cpp] socket EPOLLIN (read) event" << std::endl;
 							file_status = readSocket(*conn);
 							if (file_status == ERROR)
 							{
@@ -318,7 +336,7 @@ int main()
 						}
 						else if (current_event.events & EPOLLOUT)
 						{
-							std::cout << "[main.cpp] socket epoll out event" << std::endl;
+							std::cout << "[main.cpp] socket EPOLLOUT (write) event" << std::endl;
 							file_status = writeSocket(*conn);
 							if (file_status == ERROR)
 							{
@@ -330,8 +348,7 @@ int main()
 							{
 								epollWrapper.setEvent(target_fd, EPOLLIN);
 								conn->clearValue();
-								std::cout << "[main.cpp] connection status cleared" << std::endl;
-								std::cout << "[main.cpp] connection closed" << std::endl;
+								std::cout << "[main.cpp] connection status cleared and closed" << std::endl;
 							}
 						}
 						break;
