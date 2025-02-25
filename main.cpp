@@ -93,11 +93,8 @@ int main()
 				}
 				if(conn->isTimedOut())
 				{
-					// todo 503 time out の実装が必要 header の作成を行う
-					conn->cleanUp(); // ! 置き換え
 	 				epollWrapper.deleteEvent(target_fd);
 					connections.removeConnection(target_fd);
-					// todo 終了処理はleakが起きると思う
 					continue;
 				}
 

@@ -6,13 +6,14 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 17:50:21 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/26 07:31:14 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Connection.hpp"
 
 std::time_t Connection::timeout_ = 1000;
+int buff_size = 1024;
 
 // ==================================== constructor and destructor ====================================
 
@@ -89,15 +90,18 @@ void Connection::setReadFd()
 	int path_size = location_path.size();
 	int fd;
 
-	// cgiかどうか
-	if (path_size > 4 && location_path.substr(path_size - 4, 4) == ".php") {
+	// cgiかどうか 本来は後方一致で locationが .php かどうかを判定する
+	if (path_size > 4 && location_path.substr(path_size - 4, 4) == ".php")
+	{
 		CGI *cgi = new CGI(location_path);
 		// ! エラーハンドリング
 
 		cgi_ = cgi;
 		std::cout << "[connection] cgi is set" << std::endl;
 		return;
-	} else {
+	}
+	else
+	{
 		fd = open(location_path.c_str(), O_RDONLY);
 		if (fd == -1)
 		{
@@ -110,7 +114,7 @@ void Connection::setReadFd()
 	}
 }
 
-void Connection::setErrorFd()
+void Connection::setErrorFd(int status_code)
 {
 	std::cout << "conf path : " << conf_value_._path << std::endl;
 
@@ -119,6 +123,7 @@ void Connection::setErrorFd()
 		std::cerr << "[connection] error_page is not set" << std::endl;
 		throw std::runtime_error("[connection] error_page is not set");
 	}
+	// todo 本来なら status code に応じて error page を変更する
 	std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
 
 	std::cout << "[connection] error_page: " << error_page << " is set" << std::endl;
@@ -167,7 +172,7 @@ void Connection::clearValue()
 	// clear cgi
 	rbuff_.clear();
 	wbuff_.clear();
-	delete request_;
+	delete request_; // 二重解放の可能性あり
 	delete response_;
 	request_ = NULL;
 	response_ = NULL;
@@ -177,43 +182,29 @@ void Connection::clearValue()
 
 // ==================================== check ==============================================
 
-bool Connection::isTimedOut()
+bool Connection::isTimedOut(MainConf *mainConf)
 {
 	std::time_t now = std::time(NULL);
-	std::cout << "[connection] now time : " << now << std::endl;
-	if(now - lastActive_ > timeout_)
-		return true;
-	lastActive_ = now;
-	return false;
+	if(now - lastActive_ <= timeout_)
+	{
+		lastActive_ = now;
+		return false;
+	}
+	std::cout << "[connection] time out" << std::endl;	
+
+	setHttpRequest(mainConf);
+	setHttpResponse();
+	response_->setStatusCode(503);
+
+	setErrorFd(503); // 503
+
+	return true;
 }
 
 // ==================================== read and write ====================================
 
-FileStatus Connection::readSocket(MainConf *mainConf)
+FileStatus Connection::processAfterReadCompleted(MainConf *mainConf)
 {
-	char buff[1024];
-	ssize_t rlen = recv(fd_, buff, 1024, 0);
-
-	if(rlen < 0)
-	{
-		return ERROR;
-	}
-	else if(rlen == 0)
-	{
-		std::cout << "[connection] read socket closed by client" << std::endl;
-		return CLOSED;
-	}
-	else if (rlen == 1024) {
-		rbuff_ += buff;
-		return NOT_COMPLETED;
-	}
-
-	// rlen < 1023 読み切った後の処理
-	buff[rlen] = '\0';
-	rbuff_ += buff;
-
-	// todo ここからは関数を分割するべきかも
-
 	setHttpRequest(mainConf);
 	setHttpResponse();
 
@@ -224,7 +215,7 @@ FileStatus Connection::readSocket(MainConf *mainConf)
 		// responose_->setResponseStartLine("status code"); 前もって登録をしておく
 		// もしも error page を読み込むなら、下のgetの処理と同様に
 		// bodyを必要としないなら、headerを作成して write　の処理を呼び出
-		setErrorFd(); // 404 決め打ち テスト用
+		setErrorFd(404); // 404 決め打ち テスト用
 
 		return SUCCESS_STATIC;
 	}
@@ -250,14 +241,39 @@ FileStatus Connection::readSocket(MainConf *mainConf)
 	{
 		// todo
 	}
-	
+
 	return SUCCESS;
+}
+
+FileStatus Connection::readSocket(MainConf *mainConf)
+{
+	char buff[buff_size];
+	ssize_t rlen = recv(fd_, buff, buff_size, 0);
+
+	if(rlen < 0)
+	{
+		return ERROR;
+	}
+	else if(rlen == 0)
+	{
+		std::cout << "[connection] read socket closed by client" << std::endl;
+		return CLOSED;
+	}
+	else if (rlen == buff_size) {
+		rbuff_ += buff;
+		return NOT_COMPLETED;
+	}
+
+	buff[rlen] = '\0';
+	rbuff_ += buff;
+
+	return processAfterReadCompleted(mainConf);
 }
 
 FileStatus Connection::readStaticFile()
 {
-	char buff[1024];
-	ssize_t rlen = read(static_fd_, buff, 1024);
+	char buff[buff_size];
+	ssize_t rlen = read(static_fd_, buff, buff_size);
 
 	if(rlen < 0)
 	{
@@ -271,12 +287,12 @@ FileStatus Connection::readStaticFile()
 		static_fd_ = -1;
 		return SUCCESS;
 	}
-	else if (rlen == 1024) {
+	else if (rlen == buff_size) {
 		wbuff_ += buff; // todo wbuffでいいのか？
 		return NOT_COMPLETED;
 	}
 
-	// rlen < 1024 読み切った後の処理
+	// rlen < buff_size 読み切った後の処理
 	buff[rlen] = '\0';
 	wbuff_ += buff;
 
@@ -291,7 +307,7 @@ FileStatus Connection::readStaticFile()
 
 FileStatus Connection::readCGI()
 {
-	char buff[1024];
+	char buff[buff_size];
 	ssize_t rlen = read(cgi_->getFd(), buff, sizeof(buff) - 1);
 
 	if(rlen < 0)
@@ -323,7 +339,7 @@ FileStatus Connection::readCGI()
 
 FileStatus Connection::writeSocket()
 {
-	char buff[1024];
+	char buff[buff_size];
 
 	if(!request_)
 	{
@@ -338,23 +354,22 @@ FileStatus Connection::writeSocket()
 
 	// std::cout << wbuff_ << std::endl; // デバッグ用
 
-	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(1024));
+	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(buff_size));
 	std::memcpy(buff, wbuff_.data(), copy_len);
-	if (copy_len != 1024)
+	if (copy_len != buff_size)
 		buff[copy_len] = '\0';
 	wbuff_.erase(0, copy_len);
 	ssize_t wlen = send(fd_, buff, copy_len, 0);
 	if (wlen == -1)
 		return ERROR;
-	if (wlen == 1024)
+	if (wlen == buff_size)
 		return NOT_COMPLETED;
-	//(wlen < 1024) // 後始末はここでしている
+	//(wlen < buff_size) // 後始末はここでしている
 	delete response_;
 	delete request_;
 	response_ = NULL;
 	request_ = NULL;
 	std::cout << "[connection] write socket completed" << std::endl;
-	// todo cgi かつ chunked の場合は 最後に 0\r\n\r\n を追加する必要がある（対応しなくても良いと思う）
 	return SUCCESS;
 }
 

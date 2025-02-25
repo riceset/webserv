@@ -61,7 +61,7 @@ private:
 	int static_fd_; // static file
 
 	// buffer
-	std::string rbuff_; // 2ついるのか？
+	std::string rbuff_;
 	std::string wbuff_;
 
 	// request and response
@@ -81,7 +81,7 @@ public:
 	~Connection();
 
 	// check timeout
-	bool isTimedOut();
+	bool isTimedOut(MainConf *mainConf);
 
 	// getter
 	int getFd() const;
@@ -91,15 +91,17 @@ public:
 
 	// setter
 	void setReadFd();
-	void setErrorFd();
+	void setErrorFd(int status_code);
 	void setHttpRequest(MainConf *mainConf);
 	void setHttpResponse();
 	void clearValue();
-	// (setter) http response wrapper
+
+	// method
 	void buildStaticFileResponse();
 
 	// method static も 動的もここに位置する可能性あり
 	FileStatus readSocket(MainConf *mainConf);
+	FileStatus processAfterReadCompleted(MainConf *mainConf);
 	FileStatus writeSocket();
 	FileStatus readStaticFile();
 	FileStatus readCGI();

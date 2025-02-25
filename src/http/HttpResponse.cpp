@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 17:52:45 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 17:46:04 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/26 07:30:57 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,11 @@ std::string HttpResponse::buildResponse()
 	response += "\r\n";
 	response += body_;
 	return response;
+}
+
+void HttpResponse::setStatusCode(int status_code)
+{
+	status_code_ = status_code;
 }
 
 // ==================================== getter ====================================
