@@ -21,4 +21,5 @@ jobs:
       - name: Check code formatting
         run: |
           git fetch origin main
-          git diff --exit-code --name-only --diff-filter=AM origin/main -- | xargs clang-format --dry-run --Werror
+          # .cpp と .hpp ファイルだけを対象にフォーマットチェック
+          git diff --name-only --diff-filter=AM origin/main -- '*.cpp' '*.hpp' | xargs -r clang-format --dry-run --Werror
