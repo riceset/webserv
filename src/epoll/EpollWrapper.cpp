@@ -15,8 +15,7 @@
 EpollWrapper::EpollWrapper() {}
 
 /* Epoll constructor with max_events */
-EpollWrapper::EpollWrapper(int max_events)
-{
+EpollWrapper::EpollWrapper(int max_events) {
 	epfd_ = epoll_create(max_events);
 	if(epfd_ == -1)
 		throw std::runtime_error("Failed to create epoll instance");
@@ -24,24 +23,20 @@ EpollWrapper::EpollWrapper(int max_events)
 	max_events_ = max_events;
 }
 
-EpollWrapper::~EpollWrapper()
-{
+EpollWrapper::~EpollWrapper() {
 	/* close(epfd_); */
 }
 
-int EpollWrapper::getEpfd() const
-{
+int EpollWrapper::getEpfd() const {
 	return epfd_;
 }
 
-std::vector<struct epoll_event> EpollWrapper::getEventsList() const
-{
+std::vector<struct epoll_event> EpollWrapper::getEventsList() const {
 	return events_list_;
 }
 
 /* Registerd given file descripter to epoll instance */
-void EpollWrapper::addEvent(int fd)
-{
+void EpollWrapper::addEvent(int fd) {
 	struct epoll_event new_event;
 	new_event.events = EPOLLIN;
 	new_event.data.fd = fd;
@@ -50,15 +45,13 @@ void EpollWrapper::addEvent(int fd)
 }
 
 /* Delete given file descripter from epoll instance */
-void EpollWrapper::deleteEvent(int fd)
-{
+void EpollWrapper::deleteEvent(int fd) {
 	if(epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == -1)
 		throw std::runtime_error("Failed to delete event from epoll instance");
 }
 
 /* Wait for event */
-int EpollWrapper::epwait()
-{
+int EpollWrapper::epwait() {
 	int nfds = epoll_wait(epfd_, events_list_.data(), events_list_.size(), 0);
 	if(nfds == -1)
 		throw std::runtime_error("epoll_wait failed");
@@ -66,14 +59,12 @@ int EpollWrapper::epwait()
 }
 
 /* Operator overloading of [] operator */
-struct epoll_event &EpollWrapper::operator[](size_t index)
-{
+struct epoll_event &EpollWrapper::operator[](size_t index) {
 	return events_list_[index];
 }
 
 /* Modify event of given file descripter */
-void EpollWrapper::setEvent(int fd, uint32_t events)
-{
+void EpollWrapper::setEvent(int fd, uint32_t events) {
 	struct epoll_event new_event;
 	new_event.events = events;
 	new_event.data.fd = fd;

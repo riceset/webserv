@@ -1,8 +1,7 @@
 #include "MainConf.hpp"
 
 // Constructor
-MainConf::MainConf(std::string conf_content) : _servers()
-{
+MainConf::MainConf(std::string conf_content) : _servers() {
 	// init
 	_servers.clear();
 	_handler_directive["server"] = &MainConf::handle_server_block;
@@ -14,45 +13,31 @@ MainConf::MainConf(std::string conf_content) : _servers()
 MainConf::~MainConf() {}
 
 // Setter
-void MainConf::param(std::string conf_content)
-{
+void MainConf::param(std::string conf_content) {
 	size_t pos = 0;
 
-	while(1)
-	{
+	while(1) {
 		std::vector<std::string> tokens;
 
-		try
-		{
+		try {
 			int result = BaseConf::parse_token(conf_content, tokens, pos);
 			if(result == CONF_ERROR)
 				throw std::runtime_error("token error");
-			if(result == CONF_EOF)
-			{
+			if(result == CONF_EOF) {
 				break;
 			}
-		}
-		catch(std::runtime_error &e)
-		{
-			throw std::runtime_error("token error");
-		}
+		} catch(std::runtime_error &e) { throw std::runtime_error("token error"); }
 
-		if(!tokens.empty() &&
-		   _handler_directive.find(tokens[0]) != _handler_directive.end())
-		{
+		if(!tokens.empty() && _handler_directive.find(tokens[0]) != _handler_directive.end()) {
 			(this->*_handler_directive[tokens[0]])(tokens);
-		}
-		else
-		{
+		} else {
 			throw std::runtime_error("unknown directive");
 		}
 	}
 }
 
-void MainConf::handle_server_block(std::vector<std::string> tokens)
-{
-	if(tokens.size() != 2)
-	{
+void MainConf::handle_server_block(std::vector<std::string> tokens) {
+	if(tokens.size() != 2) {
 		throw std::runtime_error("server block syntax error");
 	}
 	// tokens[0] = server
@@ -66,14 +51,10 @@ void MainConf::handle_server_block(std::vector<std::string> tokens)
 }
 
 // Getter
-conf_value_t MainConf::getConfValue(std::string port,
-									std::string host,
-									std::string path)
-{
+conf_value_t MainConf::getConfValue(std::string port, std::string host, std::string path) {
 	conf_value_t conf_value;
 
-	for (std::vector<ServConf>::iterator it = _servers.begin(); it != _servers.end(); it++)
-	{
+	for(std::vector<ServConf>::iterator it = _servers.begin(); it != _servers.end(); it++) {
 		ServConf serv_conf = *it;
 
 		int server_port = serv_conf.get_listen().second;
@@ -83,8 +64,7 @@ conf_value_t MainConf::getConfValue(std::string port,
 		int port_num;
 		ss >> port_num;
 
-		if (server_port == port_num && server_name == host)
-		{
+		if(server_port == port_num && server_name == host) {
 			conf_value = serv_conf.getConfValue(path);
 			return conf_value;
 		}
@@ -93,17 +73,14 @@ conf_value_t MainConf::getConfValue(std::string port,
 	throw std::runtime_error("[ServConf] server not found");
 }
 
-std::vector<std::pair<std::string, int> > MainConf::get_listens()
-{
-	std::vector<std::pair<std::string, int> > listens;
+std::vector<std::pair<std::string, int>> MainConf::get_listens() {
+	std::vector<std::pair<std::string, int>> listens;
 
-	for(size_t i = 0; i < _servers.size(); i++)
-	{
+	for(size_t i = 0; i < _servers.size(); i++) {
 		listens.push_back(_servers[i].get_listen());
 	}
 
-	if(listens.empty())
-	{
+	if(listens.empty()) {
 		throw std::runtime_error("listen not found");
 	}
 
@@ -111,46 +88,38 @@ std::vector<std::pair<std::string, int> > MainConf::get_listens()
 }
 
 // Debug
-void MainConf::debug_print()
-{
-	for(size_t i = 0; i < _servers.size(); i++)
-	{
-		std::cout << "=========================== server " << i << ":"
-				  << std::endl;
+void MainConf::debug_print() {
+	for(size_t i = 0; i < _servers.size(); i++) {
+		std::cout << "=========================== server " << i << ":" << std::endl;
 		_servers[i].debug_print();
 	}
 }
 
-void MainConf::debug_print_conf_value(conf_value_t conf_value)
-{
+void MainConf::debug_print_conf_value(conf_value_t conf_value) {
 	std::cout << "listen: " << conf_value._listen.first << ":" << conf_value._listen.second << std::endl;
 	std::cout << "server_name: " << conf_value._server_name << std::endl;
 	std::cout << "error_page: " << std::endl;
-	for (std::map<int, std::string>::iterator it = conf_value._error_page.begin(); it != conf_value._error_page.end(); it++)
-	{
+	for(std::map<int, std::string>::iterator it = conf_value._error_page.begin(); it != conf_value._error_page.end();
+		it++) {
 		std::cout << it->first << " : " << it->second << std::endl;
 	}
 	std::cout << "path: " << conf_value._path << std::endl;
 	std::cout << "limit_except: ";
-	for(size_t i = 0; i < conf_value._limit_except.size(); i++)
-	{
+	for(size_t i = 0; i < conf_value._limit_except.size(); i++) {
 		std::cout << conf_value._limit_except[i] << " ";
 	}
 	std::cout << std::endl;
 	std::cout << "return: ";
-	for(size_t i = 0; i < conf_value._return.size(); i++)
-	{
+	for(size_t i = 0; i < conf_value._return.size(); i++) {
 		std::cout << conf_value._return[i] << " ";
 	}
 	std::cout << std::endl;
 	std::cout << "autoindex: " << conf_value._autoindex << std::endl;
 	std::cout << "index: ";
-	for(size_t i = 0; i < conf_value._index.size(); i++)
-	{
+	for(size_t i = 0; i < conf_value._index.size(); i++) {
 		std::cout << conf_value._index[i] << " ";
 	}
 	std::cout << std::endl;
 	std::cout << "root: " << conf_value._root << std::endl;
-	std::cout << "client_max_body_size: " << conf_value._client_max_body_size
-			  << std::endl;
+	std::cout << "client_max_body_size: " << conf_value._client_max_body_size << std::endl;
 }

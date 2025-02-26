@@ -15,8 +15,7 @@
 Listener::Listener() : ASocket() {}
 
 /* Listener constructor */
-Listener::Listener(int port) : ASocket()
-{
+Listener::Listener(int port) : ASocket() {
 	/* initialize listener socket */
 	fd_ = socket(AF_INET, SOCK_STREAM, 0);
 	if(fd_ == -1)
@@ -36,12 +35,10 @@ Listener::Listener(int port) : ASocket()
 	std::cout << "Listening on port " << port << std::endl;
 }
 
-Listener::~Listener()
-{
+Listener::~Listener() {
 	/* close(fd_); */
 }
 
-int Listener::getFd() const
-{
+int Listener::getFd() const {
 	return fd_;
 }

@@ -12,8 +12,7 @@
 
 #include "ASocket.hpp"
 
-ASocket::ASocket()
-{
+ASocket::ASocket() {
 	fd_ = 0;
 	std::memset(&addr_, 0, sizeof(addr_));
 }

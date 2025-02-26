@@ -24,9 +24,7 @@ public:
 	virtual void param(std::string conf_content);
 
 	// getter
-	conf_value_t getConfValue(std::string port,
-							  std::string server_name,
-							  std::string path); // throw
+	conf_value_t getConfValue(std::string port, std::string server_name, std::string path); // throw
 	std::vector<std::pair<std::string, int> > get_listens(); // throw
 
 	// handler

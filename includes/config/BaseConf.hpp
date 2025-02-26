@@ -27,14 +27,11 @@ public:
 
 protected:
 	// 共通のトークン解析メソッド
-	int parse_token(std::string conf_content,
-					std::vector<std::string> &tokens,
+	int parse_token(std::string conf_content, std::vector<std::string> &tokens,
 					size_t &pos);
 
 private:
-	void reset_token_state(int &state,
-						   std::string &token,
-						   std::vector<std::string> &tokens)
+	void reset_token_state(int &state, std::string &token, std::vector<std::string> &tokens)
 	{
 		state = NORMAL;
 		tokens.push_back(token);

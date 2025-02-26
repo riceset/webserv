@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:21 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/27 05:50:55 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/27 06:06:02 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ public:
 	void setStatusCode();
 
 	// getter
-	std::vector<std::string> getStartLine() const; // Ahttpに移してもいいレベル
+	std::vector<std::string> getStartLine() const;
 	std::map<std::string, std::string> getHeader() const;
 	std::string getBody() const;
 
@@ -80,8 +80,7 @@ public:
 	bool isValidRequest();
 
 	// utils
-	std::string getLocationPath(std::string request_path,
-								conf_value_t conf_value);
+	std::string getLocationPath(std::string request_path, conf_value_t conf_value);
 };
 
 #endif

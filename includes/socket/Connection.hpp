@@ -106,7 +106,6 @@ public:
 	void cleanUp();
 };
 
-/* Connection *getConnection(std::vector<Connection *> &connections, int fd); */
 std::string vecToString(std::vector<std::string> vec);
 std::string mapToString(std::map<std::string, std::string>);
 

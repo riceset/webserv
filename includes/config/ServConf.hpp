@@ -21,8 +21,7 @@ private:
 	std::vector<LocConf> _locations;
 
 	// handler
-	std::map<std::string, void (ServConf::*)(std::vector<std::string>)>
-		_handler_directive;
+	std::map<std::string, void (ServConf::*)(std::vector<std::string>)> _handler_directive;
 
 public:
 	ServConf(std::string content);
