@@ -98,8 +98,6 @@ public:
 
 	// method
 	void buildStaticFileResponse();
-
-	// method static も 動的もここに位置する可能性あり
 	FileStatus readSocket(MainConf *mainConf);
 	FileStatus processAfterReadCompleted(MainConf *mainConf);
 	FileStatus writeSocket();

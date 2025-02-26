@@ -24,12 +24,9 @@ public:
 	virtual void param(std::string conf_content);
 
 	// getter
-	// port number, server_name, path (3 arguments) finds the corresponding
-	// conf_value_t
 	conf_value_t getConfValue(std::string port,
 							  std::string server_name,
 							  std::string path); // throw
-	// listen portを取得 passive socket 作成に利用
 	std::vector<std::pair<std::string, int> > get_listens(); // throw
 
 	// handler

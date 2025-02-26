@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:21 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 17:47:38 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/27 05:50:55 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,6 @@ class HttpRequest : public AHttp
 private:
 	HttpRequest();
 
-	// request 固有の値かつ頻繁に用いるもの
 	std::string server_name_;
 	std::string port_;
 	std::string request_path_;
