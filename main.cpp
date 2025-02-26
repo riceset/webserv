@@ -41,8 +41,7 @@ int main() {
 	/* Main loop */
 	while(true) {
 		FileStatus file_status;
-		// 空いているfdを全てちょっとづつ読み込む この機構が不要な場合
-		// fileを開いた瞬間に読み込めばいい
+		// 空いているfdを全てちょっとづつ読み込む この機構が不要な場合fileを開いた瞬間に読み込めばいい
 		std::vector<Connection *> conns = connections.getConnections();
 		for(std::vector<Connection *>::iterator it = conns.begin(); it != conns.end(); ++it) {
 			if((*it)->getStaticFd() == -1)
@@ -87,67 +86,57 @@ int main() {
 
 				FileTypes type = conn->getFdType(target_fd);
 				switch(type) {
-					case SOCKET:
-						if(current_event.events & EPOLLIN) {
-							file_status = conn->readSocket(&mainConf);
-							if(file_status == ERROR) {
-								epollWrapper.deleteEvent(target_fd);
-								connections.removeConnection(target_fd);
-								close(target_fd);
-								std::cout << "[main.cpp] Error: connection closed" << std::endl;
-							}
-							if(file_status == SUCCESS_CGI) {
-								epollWrapper.addEvent(conn->getCGI()->getFd());
-								std::cout << "[main.cpp] CGI event add to epoll" << std::endl;
-								epollWrapper.setEvent(target_fd, EPOLLOUT);
-								std::cout << "[main.cpp] connection event set "
-											 "to EPOLLOUT"
-										  << std::endl;
-							}
-							if(file_status == CLOSED) {
-								epollWrapper.deleteEvent(target_fd);
-								connections.removeConnection(target_fd);
-								close(target_fd);
-								std::cout << "[main.cpp] connection closed" << std::endl;
-							}
-							// not completed
-						} else if(current_event.events & EPOLLOUT) {
-							file_status = conn->writeSocket();
-							if(file_status == ERROR) {
-								epollWrapper.deleteEvent(target_fd);
-								connections.removeConnection(target_fd);
-								close(target_fd);
-								std::cout << "[main.cpp] Error: connection closed" << std::endl;
-							}
-							if(file_status == SUCCESS) {
-								epollWrapper.setEvent(target_fd, EPOLLIN);
-								std::cout << "[main.cpp] connection event set "
-											 "to EPOLLIN"
-										  << std::endl;
-							}
-							// not completed
-						}
-						break;
-					case PIPE:
-						conn->readCGI();
+				case SOCKET:
+					if(current_event.events & EPOLLIN) {
+						file_status = conn->readSocket(&mainConf);
 						if(file_status == ERROR) {
-							epollWrapper.deleteEvent(conn->getFd());
+							epollWrapper.deleteEvent(target_fd);
+							connections.removeConnection(target_fd);
+							close(target_fd);
+							std::cout << "[main.cpp] Error: connection closed" << std::endl;
+						}
+						if(file_status == SUCCESS_CGI) {
+							epollWrapper.addEvent(conn->getCGI()->getFd());
+							std::cout << "[main.cpp] CGI event add to epoll" << std::endl;
+							epollWrapper.setEvent(target_fd, EPOLLOUT);
+							std::cout << "[main.cpp] connection event set to EPOLLOUT" << std::endl;
+						}
+						if(file_status == CLOSED) {
+							epollWrapper.deleteEvent(target_fd);
 							connections.removeConnection(target_fd);
 							close(target_fd);
 							std::cout << "[main.cpp] connection closed" << std::endl;
-						} else if(file_status == SUCCESS) {
-							epollWrapper.deleteEvent(target_fd);
-							epollWrapper.setEvent(conn->getFd(),
-												  EPOLLOUT); //  本来はSUCCESS後ではなく、cgi
-															 //  開始した後に書き込むべき time out
-															 //  が発生する可能性があるので悩ましい
-							close(target_fd);
-							std::cout << "[main.cpp] connection event set to EPOLLOUT" << std::endl;
 						}
-						// not completed
-						break;
-					default:
-						break;
+					} else if(current_event.events & EPOLLOUT) {
+						file_status = conn->writeSocket();
+						if(file_status == ERROR) {
+							epollWrapper.deleteEvent(target_fd);
+							connections.removeConnection(target_fd);
+							close(target_fd);
+							std::cout << "[main.cpp] Error: connection closed" << std::endl;
+						}
+						if(file_status == SUCCESS) {
+							epollWrapper.setEvent(target_fd, EPOLLIN);
+							std::cout << "[main.cpp] connection event set to EPOLLIN" << std::endl;
+						}
+					}
+					break;
+				case PIPE:
+					conn->readCGI();
+					if(file_status == ERROR) {
+						epollWrapper.deleteEvent(conn->getFd());
+						connections.removeConnection(target_fd);
+						close(target_fd);
+						std::cout << "[main.cpp] connection closed" << std::endl;
+					} else if(file_status == SUCCESS) {
+						epollWrapper.deleteEvent(target_fd);
+						epollWrapper.setEvent(conn->getFd(), EPOLLOUT); //本来はSUCCESS後ではなく、cgi 開始した後に書き込むべき time outも考慮
+						close(target_fd);
+						std::cout << "[main.cpp] connection event set to EPOLLOUT" << std::endl;
+					}
+					break;
+				default:
+					break;
 				}
 			}
 		}

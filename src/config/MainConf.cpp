@@ -73,8 +73,8 @@ conf_value_t MainConf::getConfValue(std::string port, std::string host, std::str
 	throw std::runtime_error("[ServConf] server not found");
 }
 
-std::vector<std::pair<std::string, int>> MainConf::get_listens() {
-	std::vector<std::pair<std::string, int>> listens;
+std::vector<std::pair<std::string, int> > MainConf::get_listens() {
+	std::vector<std::pair<std::string, int> > listens;
 
 	for(size_t i = 0; i < _servers.size(); i++) {
 		listens.push_back(_servers[i].get_listen());

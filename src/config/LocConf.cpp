@@ -107,7 +107,10 @@ void LocConf::set_limit_except(std::vector<std::string> tokens) {
 		if(s == "GET" || s == "POST" || s == "DELETE" || s == "PUT")
 			_limit_except.push_back(s);
 		else
+		{
+			std::cout << "limit_except: " << s << std::endl;
 			throw std::runtime_error("limit_except syntax error");
+		}
 		i++;
 	}
 }
