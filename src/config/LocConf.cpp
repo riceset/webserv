@@ -3,7 +3,7 @@
 // Constructor
 LocConf::LocConf() : _path("") {}
 
-LocConf::LocConf(std::string content, std::string path) : _path(path)
+LocConf::LocConf(std::string content, std::string path, LocationType type) : _type(type), _path(path)
 {
 	// init
 	_locations.clear();
@@ -77,16 +77,35 @@ void LocConf::handle_location_block(std::vector<std::string> tokens)
 	// tokens[0] = location
 	// tokens[1] = path
 	// tokens[2] = { ... }
-	if(tokens.size() != 3)
+	int token_size = tokens.size();
+	LocationType type;
+	type = NON;
+
+	if(token_size < 3 || token_size > 4)
 	{
-		throw std::runtime_error("location block syntax error");
+		throw std::runtime_error("handle_location_block args required three or four");
+	}
+
+	if (token_size == 4)
+	{
+		if (tokens[1] == "=")
+			type = EQUAL;
+		else if (tokens[1] == "~")
+			type = TILDE;
+		else if (tokens[1] == "~*")
+			type = TILDE_STAR;
+		else if (tokens[1] == "^~")
+			type = CARET_TILDE;
+		else
+			throw std::runtime_error("[LocConf] location block type is invalid");
 	}
 
 	// trim { }
-	tokens[2].erase(0, 1);
-	tokens[2].erase(tokens[2].size() - 1, 1);
+	tokens[token_size - 1].erase(0, 1);
+	tokens[token_size - 1].erase(tokens[token_size - 1].size() - 1, 1);
 
-	_locations.push_back(LocConf(tokens[2], tokens[1]));
+	// location block, path
+	_locations.push_back(LocConf(tokens[token_size - 1], tokens[token_size - 2], type));
 }
 
 void LocConf::set_limit_except(std::vector<std::string> tokens)
@@ -214,6 +233,11 @@ std::string LocConf::get_path()
 	return _path;
 }
 
+LocationType LocConf::get_type()
+{
+	return _type;
+}
+
 // Get conf_value_t
 LocConf get_location(std::string path, std::vector<LocConf> locations)
 {
@@ -232,6 +256,7 @@ LocConf get_location(std::string path, std::vector<LocConf> locations)
 
 void LocConf::getConfValue(std::string path, conf_value_t &conf_value)
 {
+	conf_value._path = _path;
 	if(_limit_except.size() > 0)
 		conf_value._limit_except = _limit_except;
 	if(_return.size() > 0)
@@ -245,8 +270,6 @@ void LocConf::getConfValue(std::string path, conf_value_t &conf_value)
 	if(_client_max_body_size.size() > 0)
 		conf_value._client_max_body_size = _client_max_body_size;
 
-	// pathの前方一致の中で長いものを優先
-	// /hoge/fuga と /hoge がある場合、/hoge/fuga が優先される
 	LocConf locConf = get_location(path, _locations);
 	if(locConf.get_path().empty())
 	{

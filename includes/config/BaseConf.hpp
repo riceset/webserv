@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
 
 class BaseConf
 {
@@ -41,10 +42,19 @@ private:
 	}
 };
 
+enum LocationType
+{
+	NON,
+	EQUAL, // =
+	TILDE, // ~
+	TILDE_STAR, // ~*
+	CARET_TILDE, // ^~
+};
+
 struct conf_value_t {
-	std::string _listen;
+	std::pair<std::string, int> _listen;
 	std::string _server_name;
-	std::vector<std::string> _error_page;
+	std::map<int, std::string> _error_page;
 	std::string _path;
 	std::vector<std::string> _limit_except;
 	std::vector<std::string> _return;

@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/16 18:19:08 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/25 17:47:14 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/26 17:45:27 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,7 +156,10 @@ bool HttpRequest::isValidHttpVersion()
 	std::string version = start_line_[2];
 
 	if(version != "HTTP/1.1")
+	{
+		std::cout << "[http request] invalid http version" << std::endl;
 		return false;
+	}
 	return true;
 }
 
@@ -166,9 +169,15 @@ bool HttpRequest::isValidHttpMethod()
 	std::string method = start_line_[0];
 	std::vector<std::string> limit_except = conf_value_._limit_except;
 
+	if (limit_except.size() == 0)
+		return true;
+
 	if(std::find(limit_except.begin(), limit_except.end(), method) ==
 	   limit_except.end())
+	{
+		std::cout << "[http request] invalid http method" << std::endl;
 		return false;
+	}
 	return true;
 }
 
@@ -180,7 +189,10 @@ bool HttpRequest::isValidPath()
 	/* make requested path that is based wevserv root */
 	location_path_ = getLocationPath(request_path_, conf_value_);
 	if(location_path_ == "")
+	{
+		std::cout << "[http request] invalid path" << std::endl;
 		return false;
+	}
 	return true;
 }
 

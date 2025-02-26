@@ -30,7 +30,7 @@ public:
 							  std::string server_name,
 							  std::string path); // throw
 	// listen portを取得 passive socket 作成に利用
-	std::vector<int> get_listen(); // throw
+	std::vector<std::pair<std::string, int> > get_listens(); // throw
 
 	// handler
 	void handle_server_block(std::vector<std::string> tokens);

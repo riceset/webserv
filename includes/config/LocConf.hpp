@@ -9,6 +9,7 @@
 class LocConf : public BaseConf
 {
 private:
+	LocationType _type;
 	std::string _path;
 	std::vector<std::string> _limit_except;
 	std::vector<std::string> _return;
@@ -24,7 +25,7 @@ private:
 
 public:
 	LocConf();
-	LocConf(std::string content, std::string path);
+	LocConf(std::string content, std::string path, LocationType type);
 	~LocConf();
 
 	virtual void param(std::string content);
@@ -40,6 +41,7 @@ public:
 
 	// getter
 	std::string get_path();
+	LocationType get_type();
 
 	// get conf_value_t
 	void getConfValue(std::string path, conf_value_t &conf_value);

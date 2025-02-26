@@ -26,9 +26,7 @@ void MainConf::param(std::string conf_content)
 		{
 			int result = BaseConf::parse_token(conf_content, tokens, pos);
 			if(result == CONF_ERROR)
-			{
 				throw std::runtime_error("token error");
-			}
 			if(result == CONF_EOF)
 			{
 				break;
@@ -69,52 +67,47 @@ void MainConf::handle_server_block(std::vector<std::string> tokens)
 
 // Getter
 conf_value_t MainConf::getConfValue(std::string port,
-									std::string server_name,
+									std::string host,
 									std::string path)
 {
 	conf_value_t conf_value;
 
-	// change path /dir/file.html to /dir/
-	size_t pos = path.find_last_of("/");
-	if(pos != std::string::npos)
+	for (std::vector<ServConf>::iterator it = _servers.begin(); it != _servers.end(); it++)
 	{
-		path = path.substr(0, pos + 1);
-	}
+		ServConf serv_conf = *it;
 
-	for(size_t i = 0; i < _servers.size(); i++)
-	{
-		if(_servers[i].get_listen() == port &&
-		   _servers[i].get_server_name() == server_name)
+		int server_port = serv_conf.get_listen().second;
+		std::string server_name = serv_conf.get_server_name();
+
+		std::stringstream ss(port);
+		int port_num;
+		ss >> port_num;
+
+		if (server_port == port_num && server_name == host)
 		{
-			/* std::cout << "server found" << std::endl; */
-			conf_value = _servers[i].getConfValue(path);
-			conf_value._path = path;
+			conf_value = serv_conf.getConfValue(path);
 			return conf_value;
 		}
 	}
 
-	throw std::runtime_error("server not found");
+	throw std::runtime_error("[ServConf] server not found");
 }
 
-std::vector<int> MainConf::get_listen()
+std::vector<std::pair<std::string, int> > MainConf::get_listens()
 {
-	std::vector<int> listen;
+	std::vector<std::pair<std::string, int> > listens;
 
 	for(size_t i = 0; i < _servers.size(); i++)
 	{
-		std::istringstream ss(_servers[i].get_listen());
-		int port;
-
-		ss >> port;
-		listen.push_back(port);
+		listens.push_back(_servers[i].get_listen());
 	}
 
-	if(listen.empty())
+	if(listens.empty())
 	{
 		throw std::runtime_error("listen not found");
 	}
 
-	return listen;
+	return listens;
 }
 
 // Debug
@@ -130,14 +123,13 @@ void MainConf::debug_print()
 
 void MainConf::debug_print_conf_value(conf_value_t conf_value)
 {
-	std::cout << "listen: " << conf_value._listen << std::endl;
+	std::cout << "listen: " << conf_value._listen.first << ":" << conf_value._listen.second << std::endl;
 	std::cout << "server_name: " << conf_value._server_name << std::endl;
-	std::cout << "error_page: ";
-	for(size_t i = 0; i < conf_value._error_page.size(); i++)
+	std::cout << "error_page: " << std::endl;
+	for (std::map<int, std::string>::iterator it = conf_value._error_page.begin(); it != conf_value._error_page.end(); it++)
 	{
-		std::cout << conf_value._error_page[i] << " ";
+		std::cout << it->first << " : " << it->second << std::endl;
 	}
-	std::cout << std::endl;
 	std::cout << "path: " << conf_value._path << std::endl;
 	std::cout << "limit_except: ";
 	for(size_t i = 0; i < conf_value._limit_except.size(); i++)

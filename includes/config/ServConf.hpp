@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <map>
+#include <string>
+#include <sstream>
 
 #include "BaseConf.hpp"
 #include "LocConf.hpp"
@@ -10,9 +12,9 @@ class ServConf : public BaseConf
 {
 private:
 	// value
-	std::string _listen;
+	std::pair<std::string, int> _listen;
 	std::string _server_name;
-	std::vector<std::string> _error_page;
+	std::map<int, std::string> _error_page;
 	std::string _client_max_body_size;
 
 	// location
@@ -36,7 +38,7 @@ public:
 	void handle_location_block(std::vector<std::string> tokens);
 
 	// gettter
-	std::string get_listen();
+	std::pair<std::string, int> get_listen();
 	std::string get_server_name();
 
 	// get conf_value_t

@@ -6,14 +6,14 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/26 07:31:14 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/26 17:38:31 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Connection.hpp"
 
 std::time_t Connection::timeout_ = 1000;
-int buff_size = 1024;
+ssize_t buff_size = 1024;
 
 // ==================================== constructor and destructor ====================================
 
@@ -116,15 +116,24 @@ void Connection::setReadFd()
 
 void Connection::setErrorFd(int status_code)
 {
-	std::cout << "conf path : " << conf_value_._path << std::endl;
-
 	if (conf_value_._error_page.empty())
 	{
 		std::cerr << "[connection] error_page is not set" << std::endl;
+		// todo page がない場合の処理
 		throw std::runtime_error("[connection] error_page is not set");
 	}
-	// todo 本来なら status code に応じて error page を変更する
-	std::string error_page = "." + conf_value_._root + conf_value_._error_page.back();
+	
+	std::string error_page;
+	std::string page_path = conf_value_._error_page[status_code];
+	if (page_path.empty())
+	{
+		std::cerr << "[connection] status code error_page is not set" << std::endl;
+	}
+	else
+	{
+		error_page = "./www/" + page_path;
+		// todo 本来は内部リダイレクト
+	}
 
 	std::cout << "[connection] error_page: " << error_page << " is set" << std::endl;
 	int fd = open(error_page.c_str(), O_RDONLY);
@@ -211,6 +220,7 @@ FileStatus Connection::processAfterReadCompleted(MainConf *mainConf)
 	// エラーハンドリング
 	if (!request_->isValidRequest())
 	{
+		std::cerr << "[connection] invalid request" << std::endl;
 		// error 400, 404, 405, 414, 505 はこの段階で確定する
 		// responose_->setResponseStartLine("status code"); 前もって登録をしておく
 		// もしも error page を読み込むなら、下のgetの処理と同様に
@@ -354,7 +364,7 @@ FileStatus Connection::writeSocket()
 
 	// std::cout << wbuff_ << std::endl; // デバッグ用
 
-	std::size_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(buff_size));
+	ssize_t copy_len = std::min(wbuff_.size(), static_cast<std::size_t>(buff_size));
 	std::memcpy(buff, wbuff_.data(), copy_len);
 	if (copy_len != buff_size)
 		buff[copy_len] = '\0';

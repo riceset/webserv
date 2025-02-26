@@ -91,7 +91,7 @@ int main()
 					std::cerr << "[main.cpp] Error: Connection not found" << std::endl;
 					continue;
 				}
-				if(conn->isTimedOut())
+				if(conn->isTimedOut(&mainConf))
 				{
 	 				epollWrapper.deleteEvent(target_fd);
 					connections.removeConnection(target_fd);
