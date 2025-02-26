@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 11:25:14 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/27 06:13:37 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/27 06:48:22 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,9 +276,6 @@ FileStatus Connection::readCGI() {
 	if(rlen < 0) {
 		std::cerr << "[connection] read pipe failed" << std::endl;
 		cgi_->killCGI();
-		close(cgi_->getFd());
-		delete cgi_;
-		cgi_ = NULL;
 		return ERROR;
 	} else if(rlen == 1023) {
 		wbuff_ += buff;

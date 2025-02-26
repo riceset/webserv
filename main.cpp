@@ -49,6 +49,7 @@ int main() {
 			file_status = (*it)->readStaticFile();
 			if(file_status == ERROR) {
 				epollWrapper.deleteEvent((*it)->getFd());
+				connections.removeConnection((*it)->getFd());
 				close((*it)->getFd());
 				std::cout << "[main.cpp] Error: connection closed" << std::endl;
 			}
@@ -81,6 +82,7 @@ int main() {
 				if(conn->isTimedOut(&mainConf)) {
 					epollWrapper.deleteEvent(target_fd);
 					connections.removeConnection(target_fd);
+					close(target_fd);
 					continue;
 				}
 
@@ -89,7 +91,7 @@ int main() {
 				case SOCKET:
 					if(current_event.events & EPOLLIN) {
 						file_status = conn->readSocket(&mainConf);
-						if(file_status == ERROR) {
+						if(file_status == ERROR || file_status == CLOSED) {
 							epollWrapper.deleteEvent(target_fd);
 							connections.removeConnection(target_fd);
 							close(target_fd);
@@ -100,12 +102,6 @@ int main() {
 							std::cout << "[main.cpp] CGI event add to epoll" << std::endl;
 							epollWrapper.setEvent(target_fd, EPOLLOUT);
 							std::cout << "[main.cpp] connection event set to EPOLLOUT" << std::endl;
-						}
-						if(file_status == CLOSED) {
-							epollWrapper.deleteEvent(target_fd);
-							connections.removeConnection(target_fd);
-							close(target_fd);
-							std::cout << "[main.cpp] connection closed" << std::endl;
 						}
 					} else if(current_event.events & EPOLLOUT) {
 						file_status = conn->writeSocket();
@@ -124,14 +120,16 @@ int main() {
 				case PIPE:
 					conn->readCGI();
 					if(file_status == ERROR) {
-						epollWrapper.deleteEvent(conn->getFd());
-						connections.removeConnection(target_fd);
+						epollWrapper.deleteEvent(target_fd);
 						close(target_fd);
+						epollWrapper.deleteEvent(conn->getFd());
+						connections.removeConnection(conn->getFd());
+						close(conn->getFd());
 						std::cout << "[main.cpp] connection closed" << std::endl;
 					} else if(file_status == SUCCESS) {
 						epollWrapper.deleteEvent(target_fd);
-						epollWrapper.setEvent(conn->getFd(), EPOLLOUT); //本来はSUCCESS後ではなく、cgi 開始した後に書き込むべき time outも考慮
 						close(target_fd);
+						epollWrapper.setEvent(conn->getFd(), EPOLLOUT); //本来はSUCCESS後ではなく、cgi 開始した後に書き込むべき time outも考慮
 						std::cout << "[main.cpp] connection event set to EPOLLOUT" << std::endl;
 					}
 					break;
