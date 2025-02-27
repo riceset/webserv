@@ -12,17 +12,18 @@ class CGI
 {
 private:
     std::string _scriptPath;
+    std::string _method;
 
+public:
+    CGI(const std::string& scriptPath, const std::string& method);
+    std::string execute();
+    ~CGI();
+
+private:
     void createPipe(int pipefd[2]);
     pid_t createChildProcess();
     void executeScriptInChild(int pipefd[2]);
     std::string readScriptOutput(int pipefd[2]);
-
-public:
-    CGI(const std::string& scriptPath);
-    ~CGI();
-
-    std::string execute();
 };
 
 #endif

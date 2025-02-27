@@ -60,6 +60,10 @@ std::string CGI::execute() {
         throw;
     }
 
+    if (output.find("Content-Type:") == std::string::npos) {
+        output = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + output;
+    }
+
     return output;
 }
 
