@@ -32,15 +32,6 @@
 
 int main()
 {
-	/* Test CGI */
-	try {
-		CGI cgi("www/script.php");
-		std::string output = cgi.execute();
-		std::cout << "CGI Response:" << std::endl << output << std::endl;
-	} catch (const std::exception& e) {
-		std::cerr << "Error executing CGI: " << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
 	try
 	{
 		/* Load configuration */
