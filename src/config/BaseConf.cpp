@@ -1,21 +1,15 @@
 #include "BaseConf.hpp"
 
-int BaseConf::parse_token(std::string conf_content,
-						  std::vector<std::string> &tokens,
-						  size_t &pos)
-{
+int BaseConf::parse_token(std::string conf_content, std::vector<std::string> &tokens, size_t &pos) {
 	std::string token;
 	char c;
 
 	int state = NORMAL;
 	int brace_count = 0;
 
-	for(;;)
-	{
-		if(pos >= conf_content.length())
-		{
-			switch(state)
-			{
+	for(;;) {
+		if(pos >= conf_content.length()) {
+			switch(state) {
 				case IN_DOUBLE_QUOTE:
 					return CONF_ERROR;
 				case IN_SINGLE_QUOTE:
@@ -30,38 +24,29 @@ int BaseConf::parse_token(std::string conf_content,
 		c = conf_content[pos];
 		pos++;
 
-		switch(state)
-		{
+		switch(state) {
 			case IN_DOUBLE_QUOTE:
 				token += c;
-				if(c == '\"')
-				{
+				if(c == '\"') {
 					reset_token_state(state, token, tokens);
 				}
 				break;
 
 			case IN_SINGLE_QUOTE:
 				token += c;
-				if(c == '\'')
-				{
+				if(c == '\'') {
 					reset_token_state(state, token, tokens);
 				}
 				break;
 
 			case IN_BRACE:
 				token += c;
-				if(c == '{')
-				{
+				if(c == '{') {
 					brace_count++;
-				}
-				else if(c == '}')
-				{
-					if(brace_count > 0)
-					{
+				} else if(c == '}') {
+					if(brace_count > 0) {
 						brace_count--;
-					}
-					else
-					{
+					} else {
 						reset_token_state(state, token, tokens);
 						return BLOCK_OK;
 					}
@@ -69,11 +54,9 @@ int BaseConf::parse_token(std::string conf_content,
 				break;
 
 			default:
-				switch(c)
-				{
+				switch(c) {
 					case ';':
-						if(!token.empty())
-						{
+						if(!token.empty()) {
 							tokens.push_back(token);
 							token.clear();
 						}
@@ -82,8 +65,7 @@ int BaseConf::parse_token(std::string conf_content,
 					case '\"':
 					case '\'':
 					case '{':
-						if(!token.empty())
-						{
+						if(!token.empty()) {
 							tokens.push_back(token);
 							token.clear();
 						}
@@ -98,16 +80,12 @@ int BaseConf::parse_token(std::string conf_content,
 						break;
 
 					default:
-						if(isspace(c))
-						{
-							if(!token.empty())
-							{
+						if(isspace(c)) {
+							if(!token.empty()) {
 								tokens.push_back(token);
 								token.clear();
 							}
-						}
-						else
-						{
+						} else {
 							token += c;
 						}
 				}
@@ -115,8 +93,7 @@ int BaseConf::parse_token(std::string conf_content,
 		}
 	}
 
-	if(token.empty())
-	{
+	if(token.empty()) {
 		return CONF_EOF;
 	}
 	return CONF_ERROR;

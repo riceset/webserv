@@ -3,30 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   Listener.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 10:40:57 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/29 19:58:21 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/25 17:43:44 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Listener.hpp"
 
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include <iostream>
-#include <stdexcept>
-
-#include "ASocket.hpp"
-
 Listener::Listener() : ASocket() {}
 
 /* Listener constructor */
-Listener::Listener(int port) : ASocket()
-{
+Listener::Listener(int port) : ASocket() {
 	/* initialize listener socket */
 	fd_ = socket(AF_INET, SOCK_STREAM, 0);
 	if(fd_ == -1)
@@ -46,12 +35,10 @@ Listener::Listener(int port) : ASocket()
 	std::cout << "Listening on port " << port << std::endl;
 }
 
-Listener::~Listener()
-{
+Listener::~Listener() {
 	/* close(fd_); */
 }
 
-int Listener::getFd() const
-{
+int Listener::getFd() const {
 	return fd_;
 }

@@ -1,10 +1,10 @@
 #pragma once
+
 #include <map>
+#include <sstream>
 
 #include "BaseConf.hpp"
 #include "ServConf.hpp"
-
-#include <sstream>
 
 class MainConf : public BaseConf
 {
@@ -24,10 +24,8 @@ public:
 	virtual void param(std::string conf_content);
 
 	// getter
-	// port number, server_name, path (3 arguments) finds the corresponding conf_value_t
-	conf_value_t get_conf_value(std::string port, std::string server_name, std::string path); //throw
-	// listen portを取得 passive socket 作成に利用
-	std::vector<int> get_listen(); //throw
+	conf_value_t getConfValue(std::string port, std::string server_name, std::string path); // throw
+	std::vector<std::pair<std::string, int> > get_listens(); // throw
 
 	// handler
 	void handle_server_block(std::vector<std::string> tokens);

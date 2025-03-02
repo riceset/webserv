@@ -35,13 +35,13 @@ int main()
 	// search server && location block
 	std::string port = "8080";
 	std::string server_name = "localhost";
-	std::string path = "/under_construction/";
+	std::string path = "/under_construction/index.php";
 	// std::string path = "/cgi/";
 	conf_value_t conf_value;
 
 	try
 	{
-		conf_value = mainConf.get_conf_value(port, server_name, path);
+		conf_value = mainConf.getConfValue(port, server_name, path);
 	}
 	catch(std::exception &e)
 	{
@@ -50,7 +50,8 @@ int main()
 	}
 
 	// debug
-	mainConf.debug_print_conf_value(conf_value);
+	// mainConf.debug_print();
+	// mainConf.debug_print_conf_value(conf_value);
 
 	return 0;
 }

@@ -3,162 +3,140 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 13:49:54 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/02/17 12:02:23 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/24 11:44:23by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-#include <sys/epoll.h>
-#include <unistd.h>
-
-#include <algorithm>
-#include <cerrno>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
-#include <map>
-#include <stdexcept>
-#include <string>
-#include <vector>
-#include <fstream>
 
 #include "Connection.hpp"
 #include "ConnectionWrapper.hpp"
 #include "EpollWrapper.hpp"
 #include "Listener.hpp"
 
-int main()
-{
-	try
-	{
-		/* Load configuration */
-		std::string confPath = "src/config/sample/test.conf";
-		std::ifstream ifs(confPath.c_str());
-		if (!ifs) {
-		    throw std::runtime_error("Failed to open configuration file");
-		}
-		// ファイル全体を文字列として読み込む
-		std::stringstream buffer;
-    	buffer << ifs.rdbuf();
-    	std::string content = buffer.str();
-		// MainConf オブジェクトを作成
-		MainConf mainConf(content);
-		/* mainConf.debug_print(); */
-		/* Make Listener, EpollWrapper, ConnectionWrapper */
-		Listener listener(8080);
-		EpollWrapper epollWrapper(100);
-		ConnectionWrapper connections;
-		epollWrapper.addEvent(listener.getFd());
-		/* Main loop */
-		while(true)
-		{
-			/* Get count of file descriptors registered in epollWrapper */
-			int nfds = epollWrapper.epwait();
-			/* Check event of each file descriptor */
-			for(int i = 0; i < nfds; ++i)
-			{
-				/* Get current event from epollWrapper */
-				struct epoll_event current_event = epollWrapper[i];
-				std::cout << "Event on fd=" << current_event.data.fd
-						  << std::endl;
-				/* If event is on listener, accept new connection */
-				if(current_event.data.fd == listener.getFd())
-				{
-					try
-					{
-						/* Make new socket and accept new connection */
-						Connection *newConn = new Connection(listener.getFd());
-						/* Registerd new socket to epollWrapper */
-						epollWrapper.addEvent(newConn->getFd());
-						/* Add new connection to connections */
-						connections.addConnection(newConn);
-					}
-					catch(const std::exception &e)
-					{
-						std::cerr << "Accept failed: " << e.what() << std::endl;
-					}
-					/* If event is on Connection, read or write data */
-				}
-				else
-				{
-					/* Get current connection from connections */
-					Connection *conn =
-						connections.getConnection(current_event.data.fd);
-					if(!conn)
-					{
-						std::cerr << "Connection not found" << std::endl;
-						continue;
-					}
-					/* If event is ready to read, read data from connection */
-					if(current_event.events & EPOLLIN)
-					{
-						std::cout << "Reading from connection fd = "
-								  << current_event.data.fd << std::endl;
-						try
-						{
-							/* Read Http request */
-							if (conn->readSocket() == true) {
-								epollWrapper.setEvent(conn->getFd(), EPOLLOUT);
-								std::cout
-									<< "Completed reading from connection fd = "
-									<< current_event.data.fd << std::endl;
-							} else {
-								std::cout << "Request is not completed" << std::endl;
-							}
-						}
-						catch(const std::runtime_error &re)
-						{
-							epollWrapper.deleteEvent(current_event.data.fd);
-							connections.removeConnection(current_event.data.fd);
-							std::cout << "Read error: " << re.what()
-									  << std::endl;
-						}
-						/* If event is ready to write, write data to connection
-						 */
-					}
-					else if(current_event.events & EPOLLOUT)
-					{
-						std::cout << "Writing to connection fd = "
-								  << current_event.data.fd << std::endl;
-						try
-						{
-							if (conn->writeSocket(&mainConf) == true) {
+std::string getConfContent() {
+	std::string confPath = "src/config/sample/test.conf";
+	std::ifstream ifs(confPath.c_str());
+	if(!ifs) {
+		throw std::runtime_error("[main.cpp] Failed to open configuration file");
+	}
+	std::stringstream buffer;
+	buffer << ifs.rdbuf();
+	std::string content = buffer.str();
+	return content;
+}
 
-								epollWrapper.setEvent(conn->getFd(), EPOLLIN);
-								std::cout << "Completed writing to connection fd = "
-									  << current_event.data.fd << std::endl;
-							} else {
-								std::cout << "Response is not completed" << std::endl;
-							}
+int main() {
+	/* Load configuration */
+	std::string content = getConfContent();
+	MainConf mainConf(content);
+
+	/* Make Listener, EpollWrapper, ConnectionWrapper */
+	Listener listener(8080);
+	EpollWrapper epollWrapper(100);
+	ConnectionWrapper connections;
+	epollWrapper.addEvent(listener.getFd());
+
+	/* Main loop */
+	while(true) {
+		FileStatus file_status;
+		// 空いているfdを全てちょっとづつ読み込む この機構が不要な場合fileを開いた瞬間に読み込めばいい
+		std::vector<Connection *> conns = connections.getConnections();
+		for(std::vector<Connection *>::iterator it = conns.begin(); it != conns.end(); ++it) {
+			if((*it)->getStaticFd() == -1)
+				continue;
+			file_status = (*it)->readStaticFile();
+			if(file_status == ERROR) {
+				epollWrapper.deleteEvent((*it)->getFd());
+				connections.removeConnection((*it)->getFd());
+				close((*it)->getFd());
+				std::cout << "[main.cpp] Error: connection closed" << std::endl;
+			}
+			if(file_status == SUCCESS) {
+				epollWrapper.setEvent((*it)->getFd(), EPOLLOUT);
+				std::cout << "[main.cpp] connection status cleared and closed" << std::endl;
+			}
+		}
+
+		int nfds = epollWrapper.epwait();
+		for(int i = 0; i < nfds; ++i) {
+			std::cout << std::endl << "[main.cpp] epoll for-loop ===[" << i << "]===" << std::endl;
+			struct epoll_event current_event = epollWrapper[i];
+			int target_fd = current_event.data.fd;
+			if(target_fd == listener.getFd()) {
+				try {
+					Connection *newConn = new Connection(listener.getFd());
+					epollWrapper.addEvent(newConn->getFd());
+					connections.addConnection(newConn);
+				} catch(const std::exception &e) {
+					std::cerr << "[main.cpp] Error: Accept failed: " << e.what() << std::endl;
+				}
+			} else {
+				Connection *conn = connections.getConnection(target_fd);
+
+				if(!conn) {
+					std::cerr << "[main.cpp] Error: Connection not found" << std::endl;
+					continue;
+				}
+				if(conn->isTimedOut(&mainConf)) {
+					epollWrapper.deleteEvent(target_fd);
+					connections.removeConnection(target_fd);
+					close(target_fd);
+					continue;
+				}
+
+				FileTypes type = conn->getFdType(target_fd);
+				switch(type) {
+				case SOCKET:
+					if(current_event.events & EPOLLIN) {
+						file_status = conn->readSocket(&mainConf);
+						if(file_status == ERROR || file_status == CLOSED) {
+							epollWrapper.deleteEvent(target_fd);
+							connections.removeConnection(target_fd);
+							close(target_fd);
+							std::cout << "[main.cpp] Error: connection closed" << std::endl;
 						}
-						catch(const std::runtime_error &re)
-						{
-							epollWrapper.deleteEvent(current_event.data.fd);
-							connections.removeConnection(current_event.data.fd);
-							std::cout << "Write error: " << re.what()
-									  << std::endl;
+						if(file_status == SUCCESS_CGI) {
+							epollWrapper.addEvent(conn->getCGI()->getFd());
+							std::cout << "[main.cpp] CGI event add to epoll" << std::endl;
+							epollWrapper.setEvent(target_fd, EPOLLOUT);
+							std::cout << "[main.cpp] connection event set to EPOLLOUT" << std::endl;
+						}
+					} else if(current_event.events & EPOLLOUT) {
+						file_status = conn->writeSocket();
+						if(file_status == ERROR) {
+							epollWrapper.deleteEvent(target_fd);
+							connections.removeConnection(target_fd);
+							close(target_fd);
+							std::cout << "[main.cpp] Error: connection closed" << std::endl;
+						}
+						if(file_status == SUCCESS) {
+							epollWrapper.setEvent(target_fd, EPOLLIN);
+							std::cout << "[main.cpp] connection event set to EPOLLIN" << std::endl;
 						}
 					}
-					else
-					{
-						if(conn->isTimedOut())
-						{
-							std::cerr << "Connection timed out" << std::endl;
-							epollWrapper.deleteEvent(current_event.data.fd);
-							close(conn->getFd());
-							delete conn;
-						}
+					break;
+				case PIPE:
+					conn->readCGI();
+					if(file_status == ERROR) {
+						epollWrapper.deleteEvent(target_fd);
+						close(target_fd);
+						epollWrapper.deleteEvent(conn->getFd());
+						connections.removeConnection(conn->getFd());
+						close(conn->getFd());
+						std::cout << "[main.cpp] connection closed" << std::endl;
+					} else if(file_status == SUCCESS) {
+						epollWrapper.deleteEvent(target_fd);
+						close(target_fd);
+						epollWrapper.setEvent(conn->getFd(), EPOLLOUT); //本来はSUCCESS後ではなく、cgi 開始した後に書き込むべき time outも考慮
+						std::cout << "[main.cpp] connection event set to EPOLLOUT" << std::endl;
 					}
+					break;
+				default:
+					break;
 				}
 			}
 		}
-	}
-	catch(const std::exception &e)
-	{
-		std::cerr << "Fatal error: " << e.what() << " (" << strerror(errno)
-				  << ")" << std::endl;
-		return EXIT_FAILURE;
 	}
 }

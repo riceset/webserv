@@ -1,4 +1,5 @@
 BasedOnStyle: 'Google'
+ColumnLimit: 120
 AccessModifierOffset: -4
 AlignEscapedNewlinesLeft: true
 AlignConsecutiveAssignments: false
@@ -9,12 +10,12 @@ AllowShortFunctionsOnASingleLine: 'Inline'
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterDefinitionReturnType: false
-AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakBeforeMultilineStrings: false  # true から false に変更
 AlwaysBreakTemplateDeclarations: true
-BinPackArguments: false
-BinPackParameters: false
+BinPackArguments: true                    # false から true に変更
+BinPackParameters: true                   # false から true に変更
 BreakBeforeBinaryOperators: 'None'
-BreakBeforeBraces: 'Allman'
+BreakBeforeBraces: 'Attach'               # 'Allman' から 'Attach' に変更
 BreakConstructorInitializersBeforeComma: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4

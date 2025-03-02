@@ -1,8 +1,10 @@
 #pragma once
+
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
 
 class BaseConf
 {
@@ -25,14 +27,11 @@ public:
 
 protected:
 	// 共通のトークン解析メソッド
-	int parse_token(std::string conf_content,
-					std::vector<std::string> &tokens,
+	int parse_token(std::string conf_content, std::vector<std::string> &tokens,
 					size_t &pos);
 
 private:
-	void reset_token_state(int &state,
-						   std::string &token,
-						   std::vector<std::string> &tokens)
+	void reset_token_state(int &state, std::string &token, std::vector<std::string> &tokens)
 	{
 		state = NORMAL;
 		tokens.push_back(token);
@@ -40,10 +39,19 @@ private:
 	}
 };
 
+enum LocationType
+{
+	NON,
+	EQUAL, // =
+	TILDE, // ~
+	TILDE_STAR, // ~*
+	CARET_TILDE, // ^~
+};
+
 struct conf_value_t {
-	std::string _listen;
+	std::pair<std::string, int> _listen;
 	std::string _server_name;
-	std::vector<std::string> _error_page;
+	std::map<int, std::string> _error_page;
 	std::string _path;
 	std::vector<std::string> _limit_except;
 	std::vector<std::string> _return;

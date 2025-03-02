@@ -3,16 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   AHttp.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmatsuba <rmatsuba@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/17 11:59:21 by rmatsuba          #+#    #+#             */
-/*   Updated: 2024/12/22 15:31:18 by rmatsuba         ###   ########.fr       */
+/*   Updated: 2025/02/25 17:47:54 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "AHttp.hpp"
-
-#include <string>
 
 AHttp::AHttp() {}
 

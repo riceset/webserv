@@ -6,7 +6,7 @@
 /*   By: atsu <atsu@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/13 14:08:59 by rmatsuba          #+#    #+#             */
-/*   Updated: 2025/01/30 08:03:15 by atsu             ###   ########.fr       */
+/*   Updated: 2025/02/25 17:48:13 by atsu             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,11 @@
 #define EPOLLWRAPPER_HPP
 
 #include <sys/epoll.h>
-
 #include <stdexcept>
 #include <vector>
+#include <unistd.h>
+#include <cerrno>
+#include <cstring>
 
 class EpollWrapper
 {
