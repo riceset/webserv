@@ -1,0 +1,294 @@
+[
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/config/BaseConf.cpp",
+   "-o",
+   "objs/config/BaseConf.o"
+  ],
+  "file": "src/config/BaseConf.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/config/ServConf.cpp",
+   "-o",
+   "objs/config/ServConf.o"
+  ],
+  "file": "src/config/ServConf.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/config/LocConf.cpp",
+   "-o",
+   "objs/config/LocConf.o"
+  ],
+  "file": "src/config/LocConf.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/config/MainConf.cpp",
+   "-o",
+   "objs/config/MainConf.o"
+  ],
+  "file": "src/config/MainConf.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/epoll/EpollWrapper.cpp",
+   "-o",
+   "objs/epoll/EpollWrapper.o"
+  ],
+  "file": "src/epoll/EpollWrapper.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/cgi/CGI.cpp",
+   "-o",
+   "objs/cgi/CGI.o"
+  ],
+  "file": "src/cgi/CGI.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/http/AHttp.cpp",
+   "-o",
+   "objs/http/AHttp.o"
+  ],
+  "file": "src/http/AHttp.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/http/HttpResponse.cpp",
+   "-o",
+   "objs/http/HttpResponse.o"
+  ],
+  "file": "src/http/HttpResponse.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/http/HttpRequest.cpp",
+   "-o",
+   "objs/http/HttpRequest.o"
+  ],
+  "file": "src/http/HttpRequest.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/socket/ConnectionWrapper.cpp",
+   "-o",
+   "objs/socket/ConnectionWrapper.o"
+  ],
+  "file": "src/socket/ConnectionWrapper.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/socket/Listener.cpp",
+   "-o",
+   "objs/socket/Listener.o"
+  ],
+  "file": "src/socket/Listener.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/socket/ASocket.cpp",
+   "-o",
+   "objs/socket/ASocket.o"
+  ],
+  "file": "src/socket/ASocket.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "-c",
+   "src/socket/Connection.cpp",
+   "-o",
+   "objs/socket/Connection.o"
+  ],
+  "file": "src/socket/Connection.cpp"
+ },
+ {
+  "directory": "/Users/riceset/webserv/webserv",
+  "arguments": [
+   "c++",
+   "-Wall",
+   "-Wextra",
+   "-Werror",
+   "-std=c++98",
+   "-Iincludes/config",
+   "-Iincludes/epoll",
+   "-Iincludes/cgi",
+   "-Iincludes/http",
+   "-Iincludes/socket",
+   "objs/config/BaseConf.o",
+   "objs/config/ServConf.o",
+   "objs/config/LocConf.o",
+   "objs/config/MainConf.o",
+   "objs/epoll/EpollWrapper.o",
+   "objs/cgi/CGI.o",
+   "objs/http/AHttp.o",
+   "objs/http/HttpResponse.o",
+   "objs/http/HttpRequest.o",
+   "objs/socket/ConnectionWrapper.o",
+   "objs/socket/Listener.o",
+   "objs/socket/ASocket.o",
+   "objs/socket/Connection.o",
+   "main.cpp",
+   "-o",
+   "webserv"
+  ],
+  "file": "main.cpp"
+ }
+]
